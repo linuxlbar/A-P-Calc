@@ -1,0 +1,50 @@
+<<<<<<< HEAD
+{
+  "name": "A&P Calculator Pro",
+  "short_name": "A&P Calc",
+  "description": "Offline calculators and tools for Aviation Maintenance Technicians.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#003366",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+=======
+{
+  "name": "A&P Calculator Pro",
+  "short_name": "A&P Calc",
+  "description": "Offline calculators and tools for Aviation Maintenance Technicians.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#003366",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+>>>>>>> bb020a45ef6a68874a81be06dccfc59de5e4ef22
+}
