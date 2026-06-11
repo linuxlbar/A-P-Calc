@@ -17,6 +17,103 @@ tabButtons.forEach(button => {
   });
 });
 
+// --- 1.5 THEME TOGGLE (DARK MODE) ---
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const currentTheme = localStorage.getItem('theme') || 'light';
+
+// Initialize theme on load
+if (currentTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeToggleBtn.textContent = '☀️';
+}
+
+themeToggleBtn.addEventListener('click', () => {
+    let theme = document.documentElement.getAttribute('data-theme');
+    
+    // Add a quick spin animation to the icon when tapped
+    themeToggleBtn.style.transform = 'rotate(360deg)';
+    setTimeout(() => themeToggleBtn.style.transform = 'rotate(0deg)', 200);
+
+    if (theme === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        themeToggleBtn.textContent = '🌙';
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        themeToggleBtn.textContent = '☀️';
+    }
+});
+
+// --- 1.6 UNIVERSAL MODULE RESET ---
+document.querySelectorAll('.calc-card').forEach(card => {
+    // Skip the Reference Library - nothing to clear there
+    if (card.id === 'module-ref') return;
+
+    const header = card.querySelector('h2');
+    if (!header) return;
+
+    // 1. Create the button physically in memory
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'module-reset-btn';
+    resetBtn.textContent = '↺ Reset';
+    
+    // 2. Attach it to the module's header
+    header.appendChild(resetBtn);
+
+    // 3. Program the wipe logic
+    resetBtn.addEventListener('click', () => {
+        // Clear all input boxes within this specific card
+        card.querySelectorAll('input').forEach(input => {
+            input.value = '';
+        });
+        
+        // Reset all output values back to the default '--'
+        // We target '[id]' so we only wipe the actual data, not your text labels
+        card.querySelectorAll('.result-display [id]').forEach(output => {
+            output.textContent = '--';
+        });
+
+        // Special handling for the Sketchpad (clears the canvas)
+        if (card.id === 'module-sketch') {
+            elements = [];
+            redraw();
+        }
+        
+        // Tactile feedback for the button itself
+        resetBtn.style.transform = 'scale(0.9)';
+        setTimeout(() => resetBtn.style.transform = 'scale(1)', 150);
+    });
+});
+
+// --- 1.7 SMART LOCAL CLEAR BUTTONS ---
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('local-clear-btn')) {
+        const toolBlock = e.target.parentElement;
+        
+        // 1. Clear all inputs inside this specific tool only
+        toolBlock.querySelectorAll('input').forEach(input => {
+            input.value = '';
+        });
+        
+        // 2. Reset all outputs back to default
+        toolBlock.querySelectorAll('.result-display [id]').forEach(output => {
+            // Maintain specific string formatting for certain tools
+            if (output.id === 'cylExtOut' || output.id === 'cylRetOut') {
+                output.textContent = '-- lbs';
+            } else if (output.id.includes('ED') || output.id === 'outBA' || output.id === 'outSB' || output.id === 'outFlat' || output.id === 'outSL') {
+                output.textContent = '--"';
+            } else {
+                output.textContent = '--';
+            }
+        });
+
+        // 3. Tactile visual feedback
+        e.target.style.transform = 'scale(0.96)';
+        setTimeout(() => e.target.style.transform = 'scale(1)', 150);
+    }
+});
+
 
 // --- 2. WEIGHT & BALANCE MODULE ---
 document.getElementById('calcWbBtn').addEventListener('click', () => {
@@ -39,13 +136,6 @@ document.getElementById('calcWbBtn').addEventListener('click', () => {
         document.getElementById('wbMoment').value = (w * a).toFixed(2);
         res.textContent = "Moment: " + (w * a).toFixed(2);
     }
-});
-
-document.getElementById('clearWbBtn').addEventListener('click', () => {
-    document.getElementById('wbWeight').value = '';
-    document.getElementById('wbArm').value = '';
-    document.getElementById('wbMoment').value = '';
-    document.getElementById('wbResult').textContent = '--';
 });
 
 document.getElementById('addCgRowBtn').addEventListener('click', () => {
@@ -117,8 +207,6 @@ document.getElementById('calcAltBtn').addEventListener('click', () => {
     document.getElementById('altResCg').textContent = (newM / newW).toFixed(2);
 });
 
-document.getElementById('clearAltBtn').addEventListener('click', () => location.reload());
-
 
 // --- 3. SHEET METAL MODULE ---
 document.getElementById('addLayerBtn').addEventListener('click', () => {
@@ -181,6 +269,44 @@ document.getElementById('calcRivetBtn').addEventListener('click', () => {
     document.getElementById('rivetPitchOut').textContent = pitch.toFixed(3);
 });
 
+// Bend Allowance & Sightline Calculator
+document.getElementById('calcBendBtn').addEventListener('click', () => {
+    const t = parseFloat(document.getElementById('bendT').value);
+    const r = parseFloat(document.getElementById('bendR').value);
+    const angle = parseFloat(document.getElementById('bendAngle').value);
+    const flange = parseFloat(document.getElementById('bendFlange').value);
+
+    // Validate inputs (Flange is optional unless they want Flat/Sightline)
+    if (isNaN(t) || isNaN(r) || isNaN(angle)) {
+        alert("Please enter at least Thickness, Radius, and Angle.");
+        return;
+    }
+
+    // 1. Calculate Bend Allowance (AC 43.13 Empirical Formula)
+    const ba = ((0.01743 * r) + (0.0078 * t)) * angle;
+
+    // 2. Calculate Setback (K-Factor * (R + T))
+    // Convert angle to radians for Math.tan
+    const kFactor = Math.tan((angle / 2) * (Math.PI / 180));
+    const sb = kFactor * (r + t);
+
+    // Output BA and SB
+    document.getElementById('outBA').textContent = ba.toFixed(4) + '"';
+    document.getElementById('outSB').textContent = sb.toFixed(4) + '"';
+
+    // 3. Calculate Flat & Sightline (if Flange length is provided)
+    if (!isNaN(flange)) {
+        const flat = flange - sb;
+        const sightline = flat + r;
+        
+        document.getElementById('outFlat').textContent = flat.toFixed(4) + '"';
+        document.getElementById('outSL').textContent = sightline.toFixed(4) + '"';
+    } else {
+        document.getElementById('outFlat').textContent = "Need Flange";
+        document.getElementById('outSL').textContent = "Need Flange";
+    }
+});
+
 
 // --- 4. ELECTRICAL MODULE ---
 document.getElementById('calcElecBtn').addEventListener('click', () => {
@@ -215,6 +341,29 @@ document.getElementById('calcLoadBtn').addEventListener('click', () => {
     document.getElementById('loadRes').textContent = watts.toFixed(1);
 });
 
+// --- Battery Specific Gravity Correction ---
+document.getElementById('calcSgBtn').addEventListener('click', () => {
+    const sg = parseFloat(document.getElementById('sgMeasured').value);
+    const temp = parseFloat(document.getElementById('sgTemp').value);
+
+    if (isNaN(sg) || isNaN(temp)) {
+        alert("Please enter both Measured SG and Temperature.");
+        return;
+    }
+
+    // Standard formula: 0.004 adjustment for every 10 degrees difference from 80F
+    const tempDiff = temp - 80;
+    const correction = (tempDiff / 10) * 0.004;
+    const correctedSg = sg + correction;
+
+    // Format the correction to explicitly show the plus or minus sign
+    const sign = correction > 0 ? "+" : "";
+    document.getElementById('sgCorrection').textContent = sign + correction.toFixed(4);
+    
+    // We update the final output LAST so the Smart Clipboard explicitly grabs this value
+    document.getElementById('sgCorrectedOut').textContent = correctedSg.toFixed(3);
+});
+
 
 // --- 5. GENERAL MATH MODULE ---
 function safeEval(expr) {
@@ -224,12 +373,141 @@ function safeEval(expr) {
     } catch (e) { return "Error"; }
 }
 
-document.getElementById('calcExprBtn').addEventListener('click', () => {
-    const expr = document.getElementById('mathExpr').value;
-    const res = safeEval(expr);
-    document.getElementById('exprRes').textContent = isNaN(res) ? "Invalid input" : res;
+// Standard Calculator Logic
+const calcDisplay = document.getElementById('calcDisplay');
+const calcHiddenResult = document.getElementById('calcHiddenResult');
+const calcHistoryContainer = document.getElementById('calcHistoryContainer');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+let parenCount = 0;
+let calcHistory = []; 
+
+// 1. Load persistent history on boot
+const savedHistory = localStorage.getItem('calcHistoryVault');
+if (savedHistory) {
+    calcHistory = JSON.parse(savedHistory);
+    renderCalcHistory();
+}
+
+// 2. The History Renderer & Smart Clipboard Hook
+function renderCalcHistory() {
+    if (calcHistory.length === 0) {
+        calcHistoryContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No history yet</div>';
+        return;
+    }
+
+    calcHistoryContainer.innerHTML = '';
+    
+    // Loop backwards so the newest calculation sits at the top of the list
+    for (let i = calcHistory.length - 1; i >= 0; i--) {
+        const entry = calcHistory[i];
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        
+        div.innerHTML = `
+            <div style="flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <span class="history-equation">${entry.eq} =</span>
+                <span class="history-result">${entry.res}</span>
+            </div>
+            <button class="history-copy-btn" data-res="${entry.res}">Copy</button>
+        `;
+        calcHistoryContainer.appendChild(div);
+    }
+
+    // Attach logic to the new Copy buttons
+    calcHistoryContainer.querySelectorAll('.history-copy-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const resToCopy = e.target.getAttribute('data-res');
+            
+            // A. Copy to the device's native OS clipboard
+            navigator.clipboard.writeText(resToCopy).catch(err => console.log("Native clipboard bypassed."));
+            
+            // B. Send it straight into our custom Smart Clipboard engine
+            smartClipboard = resToCopy;
+            localStorage.setItem('smartClipboard', smartClipboard);
+
+            // C. Tactile UI Feedback
+            const originalText = e.target.textContent;
+            e.target.textContent = 'Copied ✓';
+            e.target.style.backgroundColor = 'var(--success-text)';
+            e.target.style.color = 'white';
+            e.target.style.borderColor = 'var(--success-text)';
+            
+            setTimeout(() => {
+                e.target.textContent = originalText;
+                e.target.style.backgroundColor = '';
+                e.target.style.color = '';
+                e.target.style.borderColor = '';
+            }, 1000);
+        });
+    });
+}
+
+// 3. Clear History Logic
+if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', () => {
+        calcHistory = [];
+        localStorage.removeItem('calcHistoryVault');
+        renderCalcHistory();
+    });
+}
+
+// 4. Calculator Brain
+document.querySelectorAll('.calc-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-val');
+        
+        if (calcDisplay.value === 'Error') calcDisplay.value = '';
+
+        if (val === 'C') {
+            calcDisplay.value = '';
+            calcHiddenResult.textContent = '--';
+            parenCount = 0;
+        } else if (val === '=') {
+            const originalExpr = calcDisplay.value; // Save exactly what is on screen
+            let expr = calcDisplay.value.replace(/×/g, '*').replace(/÷/g, '/').replace(/%/g, '/100');
+            
+            while(parenCount > 0) { expr += ')'; parenCount--; }
+            
+            let res = safeEval(expr);
+            
+            if (res !== "Error" && res !== undefined && !isNaN(res) && calcDisplay.value.trim() !== "") {
+                res = Math.round(res * 1000000) / 1000000; 
+                calcDisplay.value = res;
+                calcHiddenResult.textContent = res; 
+                parenCount = 0;
+
+                // Push to History Array (Cap at 10 items to save space)
+                calcHistory.push({ eq: originalExpr, res: res });
+                if (calcHistory.length > 10) calcHistory.shift(); 
+                
+                // Save and Render
+                localStorage.setItem('calcHistoryVault', JSON.stringify(calcHistory));
+                renderCalcHistory();
+                
+            } else {
+                calcDisplay.value = 'Error';
+                setTimeout(() => calcDisplay.value = '', 1200);
+            }
+        } else if (val === '()') {
+            const lastChar = calcDisplay.value.slice(-1);
+            if (parenCount > 0 && lastChar !== '(' && !['+','-','*','/','×','÷'].includes(lastChar)) {
+                calcDisplay.value += ')';
+                parenCount--;
+            } else {
+                calcDisplay.value += '(';
+                parenCount++;
+            }
+        } else {
+            if (val === '*') calcDisplay.value += '×';
+            else if (val === '/') calcDisplay.value += '÷';
+            else calcDisplay.value += val;
+        }
+
+        calcDisplay.dispatchEvent(new Event('input', { bubbles: true }));
+    });
 });
 
+// Fraction ↔ Decimal Logic
 function gcd(a, b) { return b ? gcd(b, a % b) : a; }
 
 document.getElementById('convFracBtn').addEventListener('click', () => {
@@ -256,6 +534,7 @@ document.getElementById('convFracBtn').addEventListener('click', () => {
     document.getElementById('fracRes').textContent = result || "Invalid input";
 });
 
+// Proportions & Ratios Logic
 document.getElementById('calcPropBtn').addEventListener('click', () => {
     const aInput = document.getElementById('propA');
     const bInput = document.getElementById('propB');
@@ -271,7 +550,7 @@ document.getElementById('calcPropBtn').addEventListener('click', () => {
     else if (isNaN(d)) { dInput.value = (b * c) / a; }
 });
 
-// --- Percentage Calculator Logic ---
+// Percentage Calculator Logic
 document.getElementById('calcPctBtn').addEventListener('click', () => {
     const type = document.getElementById('pctType').value;
     const x = parseFloat(document.getElementById('pctX').value);
@@ -523,14 +802,29 @@ measureInput.addEventListener('input', (e) => {
     }
 });
 
-// --- 9. PC DRAG-TO-SCROLL LOGIC ---
-function enableDragScroll(containerSelector) {
+// --- 9. SMART NAVIGATION SCROLL (WHEEL + DRAG) ---
+function enableSmartScroll(containerSelector) {
     const slider = document.querySelector(containerSelector);
     if (!slider) return;
 
+    // FEATURE 1: Mouse Wheel Translation (The PC Standard)
+    // Translates standard up/down mouse wheel scrolling into left/right movement
+    slider.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0) {
+            e.preventDefault(); // Stops the page from scrolling down
+            slider.scrollLeft += e.deltaY; // Moves the bar left/right instead
+        }
+    }, { passive: false });
+
+    // FEATURE 2: Bulletproof Click & Drag (Fallback)
     let isDown = false;
     let startX;
     let scrollLeft;
+
+    // Kills the browser's native "ghost drag" instinct on the buttons
+    slider.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('dragstart', (e) => e.preventDefault());
+    });
 
     slider.addEventListener('mousedown', (e) => {
         isDown = true;
@@ -541,40 +835,32 @@ function enableDragScroll(containerSelector) {
 
     slider.addEventListener('mouseleave', () => {
         isDown = false;
-        slider.style.cursor = ''; // Revert to default
+        slider.style.cursor = '';
+        slider.querySelectorAll('button').forEach(btn => btn.style.pointerEvents = 'auto');
     });
 
     slider.addEventListener('mouseup', () => {
         isDown = false;
-        slider.style.cursor = ''; // Revert to default
+        slider.style.cursor = '';
+        slider.querySelectorAll('button').forEach(btn => btn.style.pointerEvents = 'auto');
     });
 
     slider.addEventListener('mousemove', (e) => {
         if (!isDown) return;
-        e.preventDefault(); // Prevents the browser from highlighting text while dragging
+        e.preventDefault(); 
+        
+        // Temporarily turns off button clicking while moving so you don't accidentally switch tabs
+        slider.querySelectorAll('button').forEach(btn => btn.style.pointerEvents = 'none');
+        
         const x = e.pageX - slider.offsetLeft;
-        const walk = (x - startX) * 2; // The * 2 determines scroll speed
+        const walk = (x - startX) * 2; 
         slider.scrollLeft = scrollLeft - walk;
     });
 }
 
-// Apply to main navigation and reference sub-navigation
-enableDragScroll('.tabs');
-enableDragScroll('.sub-tabs');
-
-// --- 6. PHYSICS MODULE LOGIC ---
-
-// Helper function to allow both decimals and fractions in inputs
-function parseFractionInput(val) {
-    if (!val || val.trim() === '') return NaN;
-    if (val.includes('/')) {
-        const parts = val.split('/');
-        if (parts.length === 2 && parseFloat(parts[1]) !== 0) {
-            return parseFloat(parts[0]) / parseFloat(parts[1]);
-        }
-    }
-    return parseFloat(val);
-}
+// Boot up the logic for both navigation bars
+enableSmartScroll('.tabs');
+enableSmartScroll('.sub-tabs');
 
 // Pascal's Law (Hydraulics)
 document.getElementById('calcPascalBtn').addEventListener('click', () => {
@@ -622,6 +908,16 @@ document.getElementById('calcWorkBtn').addEventListener('click', () => {
     else if (isNaN(w)) wInput.value = (f * d).toFixed(2);
 });
 
+// Helper to parse fractions (e.g., "1/3") into decimals for Hydraulics
+function parseFractionInput(val) {
+    if (!val) return NaN;
+    if (val.includes('/')) {
+        const parts = val.split('/');
+        return parseFloat(parts[0]) / parseFloat(parts[1]);
+    }
+    return parseFloat(val);
+}
+
 // Hydraulic Displacement (Area & Distance)
 document.getElementById('calcDispBtn').addEventListener('click', () => {
     const a1Input = document.getElementById('physA1');
@@ -647,12 +943,6 @@ document.getElementById('calcDispBtn').addEventListener('click', () => {
     else if (isNaN(d2)) d2Input.value = ((a1 * d1) / a2).toFixed(4);
 });
 
-document.getElementById('clearDispBtn').addEventListener('click', () => {
-    document.getElementById('physA1').value = '';
-    document.getElementById('physD1').value = '';
-    document.getElementById('physA2').value = '';
-    document.getElementById('physD2').value = '';
-});
 
 // Double-Acting Actuating Cylinder Logic
 document.getElementById('calcCylBtn').addEventListener('click', () => {
@@ -1050,3 +1340,276 @@ document.addEventListener('keydown', (e) => {
 
 // Boot up the engine
 redraw();
+
+// ==============================
+// 14.  GLOBAL DATA PERSISTENCE
+// ==============================
+
+function saveOmniVault() {
+    const state = {
+        inputs: {},
+        outputs: {},
+        dynamic: {
+            // Arrays to hold rows that the user can physically add/remove
+            cgRows: Array.from(document.querySelectorAll('.cg-row')).map(r => ({
+                item: r.querySelector('input[type="text"]')?.value || '',
+                w: r.querySelector('.cg-weight')?.value || '',
+                a: r.querySelector('.cg-arm')?.value || ''
+            })),
+            remRows: Array.from(document.querySelectorAll('.rem-row')).map(r => ({
+                w: r.querySelector('.rem-wt')?.value || '',
+                a: r.querySelector('.rem-arm')?.value || ''
+            })),
+            addRows: Array.from(document.querySelectorAll('.add-row')).map(r => ({
+                w: r.querySelector('.add-wt')?.value || '',
+                a: r.querySelector('.add-arm')?.value || ''
+            })),
+            metalLayers: Array.from(document.querySelectorAll('.layer-input')).map(input => input.value)
+        },
+        // Grab the raw mathematical data from the Sketchpad engine
+        sketchpad: typeof elements !== 'undefined' ? elements : []
+    };
+
+    // 1. Grab all static text, number, and dropdown inputs automatically
+    document.querySelectorAll('input[id], select[id]').forEach(el => {
+        if (el.id !== 'refSearch') { // Ignore the search bar so it doesn't get stuck
+            state.inputs[el.id] = el.value;
+        }
+    });
+
+    // 2. Grab all computed mathematical outputs automatically
+    document.querySelectorAll('.result-display [id]').forEach(el => {
+        state.outputs[el.id] = el.textContent;
+    });
+
+    // Compress and save to the local hard drive
+    localStorage.setItem('omniVault', JSON.stringify(state));
+}
+
+function loadOmniVault() {
+    const saved = localStorage.getItem('omniVault');
+    if (!saved) return;
+
+    try {
+        const state = JSON.parse(saved);
+
+        // 1. Restore all Static Inputs
+        if (state.inputs) {
+            Object.keys(state.inputs).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = state.inputs[id];
+            });
+        }
+
+        // 2. Restore all Computed Outputs
+        if (state.outputs) {
+            Object.keys(state.outputs).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = state.outputs[id];
+            });
+        }
+
+        // 3. Restore Dynamic Rows (Weight & Balance / Metal)
+        if (state.dynamic) {
+            
+            if (state.dynamic.cgRows && state.dynamic.cgRows.length > 0) {
+                const cgContainer = document.getElementById('cg-layers-container');
+                cgContainer.innerHTML = ''; 
+                state.dynamic.cgRows.forEach(rowData => {
+                    const div = document.createElement('div');
+                    div.className = 'cg-row';
+                    div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px;';
+                    div.innerHTML = `<input type="text" placeholder="Item" value="${rowData.item}" style="flex: 2; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;"><input type="number" inputmode="decimal" class="cg-weight" placeholder="W" value="${rowData.w}" style="flex: 1.5; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;"><input type="number" inputmode="decimal" class="cg-arm" placeholder="A" value="${rowData.a}" style="flex: 1.5; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;">`;
+                    cgContainer.appendChild(div);
+                });
+            }
+            
+            if (state.dynamic.remRows && state.dynamic.remRows.length > 0) {
+                const remContainer = document.getElementById('rem-container');
+                remContainer.querySelectorAll('.rem-row').forEach(e => e.remove());
+                state.dynamic.remRows.forEach(rowData => {
+                    const div = document.createElement('div');
+                    div.className = 'rem-row';
+                    div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
+                    div.innerHTML = `<input type="number" inputmode="decimal" class="rem-wt" placeholder="Wt" value="${rowData.w}" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"><input type="number" inputmode="decimal" class="rem-arm" placeholder="Arm" value="${rowData.a}" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">`;
+                    remContainer.appendChild(div);
+                });
+            }
+
+            if (state.dynamic.addRows && state.dynamic.addRows.length > 0) {
+                const addContainer = document.getElementById('add-container');
+                addContainer.querySelectorAll('.add-row').forEach(e => e.remove());
+                state.dynamic.addRows.forEach(rowData => {
+                    const div = document.createElement('div');
+                    div.className = 'add-row';
+                    div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
+                    div.innerHTML = `<input type="number" inputmode="decimal" class="add-wt" placeholder="Wt" value="${rowData.w}" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"><input type="number" inputmode="decimal" class="add-arm" placeholder="Arm" value="${rowData.a}" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">`;
+                    addContainer.appendChild(div);
+                });
+            }
+
+            if (state.dynamic.metalLayers && state.dynamic.metalLayers.length > 0) {
+                const layerContainer = document.getElementById('layers-container');
+                layerContainer.innerHTML = '';
+                state.dynamic.metalLayers.forEach((val, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'input-group';
+                    div.innerHTML = `<label>Layer ${idx + 1} Thickness</label><input type="number" inputmode="decimal" class="layer-input" step="0.001" value="${val}">`;
+                    layerContainer.appendChild(div);
+                });
+            }
+        }
+
+        // 4. Restore the Sketchpad
+        if (state.sketchpad && typeof elements !== 'undefined' && typeof redraw === 'function') {
+            elements = state.sketchpad;
+            redraw();
+        }
+
+        // 5. Trigger Visual Updates for specific interactive UI elements
+        const rulerInput = document.getElementById('measureInput');
+        if (rulerInput && rulerInput.value) rulerInput.dispatchEvent(new Event('input'));
+        
+        const pctSelect = document.getElementById('pctType');
+        if (pctSelect && pctSelect.value) pctSelect.dispatchEvent(new Event('change'));
+
+    } catch (e) {
+        console.error("Omni-Vault Error:", e);
+    }
+}
+
+// --- BOOT & EVENT TRIGGERS ---
+
+// 1. Unpack the vault immediately when the app opens
+loadOmniVault();
+
+// 2. Auto-save every time a user types a number or changes a dropdown
+document.addEventListener('input', (e) => {
+    if (e.target.id !== 'refSearch') saveOmniVault();
+});
+
+// 3. Auto-save when a user clicks any button (Calculate, Clear, Add Row, Change Color)
+document.addEventListener('click', (e) => {
+    // We delay the save by 50ms so the button's action (like wiping an input) finishes first
+    if (e.target.tagName === 'BUTTON' || e.target.classList.contains('color-btn')) {
+        setTimeout(saveOmniVault, 50);
+    }
+});
+
+// 4. Auto-save when a user finishes drawing a shape on the Sketchpad
+const canvasTracker = document.getElementById('drawingCanvas');
+if (canvasTracker) {
+    canvasTracker.addEventListener('mouseup', saveOmniVault);
+    canvasTracker.addEventListener('touchend', saveOmniVault);
+}
+
+// =========================================================================
+// 15. SMART CLIPBOARD ENGINE (V2)
+// =========================================================================
+
+let smartClipboard = localStorage.getItem('smartClipboard') || null;
+
+// --- Part 1: The Catcher (Watches for new results) ---
+const resultObserver = new MutationObserver((mutations) => {
+    mutations.forEach(mutation => {
+        const text = mutation.target.textContent;
+        if (text.includes('--') || text.includes('Error') || text.includes('NaN')) return;
+        
+        const match = text.match(/-?[\d,]+(\.\d+)?/);
+        if (match) {
+            const cleanNumber = match[0].replace(/,/g, '');
+            smartClipboard = cleanNumber;
+            localStorage.setItem('smartClipboard', smartClipboard);
+        }
+    });
+});
+
+document.querySelectorAll('.result-display [id]').forEach(el => {
+    resultObserver.observe(el, { childList: true, characterData: true, subtree: true });
+});
+
+// --- Part 2: The UI Injector ---
+let activeInput = null;
+let badgeHideTimer = null;
+const pasteBadge = document.createElement('span');
+pasteBadge.className = 'smart-paste-badge';
+
+// BULLETPROOFING: Stop the browser from blurring the input when tapping the badge
+const keepFocus = (e) => { e.preventDefault(); e.stopPropagation(); };
+pasteBadge.addEventListener('mousedown', keepFocus);
+pasteBadge.addEventListener('touchstart', keepFocus, { passive: false });
+
+document.addEventListener('focusin', (e) => {
+    // Broaden the net: Target ALL inputs except the Reference Search and 'Item' text columns
+    if (e.target.tagName === 'INPUT' && 
+        e.target.id !== 'refSearch' && 
+        e.target.placeholder !== 'Item') {
+        
+        if (smartClipboard) {
+            clearTimeout(badgeHideTimer); // Cancel any pending destruction
+            activeInput = e.target;
+            
+            const group = activeInput.closest('.input-group');
+            const label = group ? group.querySelector('label') : null;
+            
+            // Smart Injection Layout
+            if (label) {
+                pasteBadge.style.position = 'static';
+                label.appendChild(pasteBadge);
+            } else {
+                // Fallback: Float the badge above inputs that have no labels
+                activeInput.parentElement.style.position = 'relative';
+                pasteBadge.style.position = 'absolute';
+                pasteBadge.style.right = '0';
+                pasteBadge.style.top = '-26px';
+                activeInput.parentElement.appendChild(pasteBadge);
+            }
+
+            pasteBadge.textContent = `📋 Paste ${smartClipboard}`;
+            pasteBadge.style.backgroundColor = 'var(--primary-color)';
+            
+            setTimeout(() => pasteBadge.style.opacity = '1', 10);
+        }
+    }
+});
+
+document.addEventListener('focusout', (e) => {
+    if (e.target === activeInput) {
+        // GRACE PERIOD: 350ms rides out the mobile keyboard stutter
+        badgeHideTimer = setTimeout(() => {
+            pasteBadge.style.opacity = '0';
+            setTimeout(() => {
+                if (pasteBadge.parentElement) pasteBadge.parentElement.removeChild(pasteBadge);
+            }, 200);
+        }, 350); 
+    }
+});
+
+pasteBadge.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); 
+    
+    if (activeInput && smartClipboard) {
+        // Special logic for Math Evaluator: Append instead of Overwrite
+        if (activeInput.id === 'calcDisplay' && activeInput.value !== '') {
+            activeInput.value += smartClipboard;
+        } else {
+            activeInput.value = smartClipboard;
+        }
+        
+        // Trigger the Omni-Vault to save this newly pasted data
+        activeInput.dispatchEvent(new Event('input', { bubbles: true })); 
+        
+        // Tactile Success Feedback
+        pasteBadge.textContent = '✓ Pasted';
+        pasteBadge.style.backgroundColor = 'var(--success-text)';
+        activeInput.style.borderColor = 'var(--success-text)';
+        
+        setTimeout(() => {
+            pasteBadge.style.opacity = '0';
+            setTimeout(() => {
+                if (pasteBadge.parentElement) pasteBadge.parentElement.removeChild(pasteBadge);
+                activeInput.style.borderColor = '';
+            }, 200);
+        }, 800);
+    }
+});

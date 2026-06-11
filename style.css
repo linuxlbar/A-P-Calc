@@ -78,6 +78,7 @@ h1 {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .tab-btn:hover {
@@ -140,6 +141,9 @@ h1 {
 }
 
 .input-group label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -285,6 +289,7 @@ footer {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
   white-space: nowrap;
 }
 
@@ -348,8 +353,11 @@ footer {
 /* Prevent text highlighting while dragging on PC */
 .tabs, .sub-tabs {
   user-select: none;
-  -webkit-user-select: none; 
+  -webkit-user-select: none;
+  -webkit-overflow-scrolling: touch; 
+  overscroll-behavior-x: contain; /* Traps the mouse wheel inside the nav bar */
 }
+
 
 /* --- Sketchpad Canvas --- */
 #drawingCanvas {
@@ -406,4 +414,207 @@ footer {
   color: white;
   border-color: var(--primary-color);
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* =========================================================================
+   THE "PAINT JOB" (DARK MODE & MICRO-INTERACTIONS)
+   ========================================================================= */
+
+/* --- Dark Mode Variables --- */
+[data-theme="dark"] {
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --primary-color: #38bdf8; /* Lighter sky blue for dark mode contrast */
+  --primary-light: #0ea5e9;
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --border-color: #374151;
+  --success-bg: #064e3b;
+  --success-text: #34d399;
+}
+
+/* Override the hardcoded #fafafa for internal containers in dark mode */
+[data-theme="dark"] .calc-card > div {
+  background-color: #262626 !important;
+  border-color: #404040 !important;
+}
+
+[data-theme="dark"] body {
+  background: var(--bg-color); /* Drops the gradient for a solid dark background */
+}
+
+/* Fix Sketchpad Canvas contrast in Dark Mode */
+[data-theme="dark"] #drawingCanvas {
+  background-color: #262626 !important;
+  border-color: #404040 !important;
+}
+
+/* --- Micro-Interactions --- */
+
+/* 1. Global Smooth Color Transitions */
+body, .calc-card, .calc-card > div, input, select, .action-btn {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 2. Tactile Button "Squish" */
+.action-btn {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.action-btn:active {
+  transform: scale(0.96); /* Gives a physical compression feel when tapped */
+}
+
+/* 3. Fluid Card Entries (Replaces the basic linear fade) */
+.calc-card {
+  animation: slideFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(12px) scale(0.98); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+/* --- Universal Reset Button --- */
+.calc-card h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.module-reset-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.module-reset-btn:hover {
+  background: var(--bg-color);
+  color: #ef4444; /* Switches to a warning red on hover */
+  border-color: #ef4444;
+}
+
+/* --- Drag Scroll Firewall --- */
+.tabs.is-dragging button,
+.sub-tabs.is-dragging button {
+  pointer-events: none !important;
+}
+
+/* --- Smart Paste Badge (V2) --- */
+.smart-paste-badge {
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.1s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  z-index: 50; /* Ensures it floats above other elements */
+}
+
+.smart-paste-badge:active {
+  transform: scale(0.9);
+}
+
+/* --- Standard Calculator Grid --- */
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.calc-btn {
+  margin-top: 0;
+  padding: 1.2rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+
+.num-btn {
+  background-color: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.num-btn:hover {
+  background-color: var(--bg-color);
+}
+
+/* Ensure the numbers look beautiful in Dark Mode */
+[data-theme="dark"] .num-btn {
+  background-color: #333333;
+  color: #f3f4f6;
+  border-color: #404040;
+}
+
+/* --- Calculator History Log --- */
+.calc-history-container {
+  margin-top: 15px;
+  max-height: 140px; /* Forces a scrollbar if you have more than 3 items */
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--card-bg);
+  scroll-behavior: smooth;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-family: monospace;
+  font-size: 0.95rem;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-equation {
+  color: var(--text-muted);
+  margin-right: 8px;
+}
+
+.history-result {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 1.05rem;
+}
+
+.history-copy-btn {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--primary-color);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 10px;
+}
+
+.history-copy-btn:hover {
+  background: var(--primary-color);
+  color: white;
 }
