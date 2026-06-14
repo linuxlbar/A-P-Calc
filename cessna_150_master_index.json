@@ -1,0 +1,127 @@
+[
+    {
+        "title": "Cover Page",
+        "location": "Cover Page",
+        "pdf_page": 1
+    },
+    {
+        "title": "List of Effective Pages",
+        "location": "List of Effective Pages",
+        "pdf_page": 2
+    },
+    {
+        "title": "Table of Contents",
+        "location": "Table of Contents",
+        "pdf_page": 3
+    },
+    {
+        "title": "Cross Reference Listing",
+        "location": "Cross Reference Listing",
+        "pdf_page": 4
+    },
+    {
+        "title": "Foreword",
+        "location": "Foreword",
+        "pdf_page": 5
+    },
+    {
+        "title": "1. General Description",
+        "location": "1. General Description",
+        "pdf_page": 7
+    },
+    {
+        "title": "2. Ground Handling, Servicing, Lubrication and Inspection",
+        "location": "2. Ground Handling, Servicing, Lubrication and Inspection",
+        "pdf_page": 13
+    },
+    {
+        "title": "3. Fuselage",
+        "location": "3. Fuselage",
+        "pdf_page": 41
+    },
+    {
+        "title": "4. Wings and Empennage",
+        "location": "4. Wings and Empennage",
+        "pdf_page": 59
+    },
+    {
+        "title": "5. Landing Gear and Brakes",
+        "location": "5. Landing Gear and Brakes",
+        "pdf_page": 67
+    },
+    {
+        "title": "6. Aileron Control System",
+        "location": "6. Aileron Control System",
+        "pdf_page": 97
+    },
+    {
+        "title": "7. Wing Flap Control System",
+        "location": "7. Wing Flap Control System",
+        "pdf_page": 105
+    },
+    {
+        "title": "8. Elevator Control System",
+        "location": "8. Elevator Control System",
+        "pdf_page": 117
+    },
+    {
+        "title": "9. Elevator Trim Control System",
+        "location": "9. Elevator Trim Control System",
+        "pdf_page": 123
+    },
+    {
+        "title": "10. Rudder Control System",
+        "location": "10. Rudder Control System",
+        "pdf_page": 131
+    },
+    {
+        "title": "11. Engine",
+        "location": "11. Engine",
+        "pdf_page": 139
+    },
+    {
+        "title": "12. Fuel System",
+        "location": "12. Fuel System",
+        "pdf_page": 167
+    },
+    {
+        "title": "13. Propeller",
+        "location": "13. Propeller",
+        "pdf_page": 175
+    },
+    {
+        "title": "14. Utility Systems",
+        "location": "14. Utility Systems",
+        "pdf_page": 179
+    },
+    {
+        "title": "15. Instruments and Instrument Systems",
+        "location": "15. Instruments and Instrument Systems",
+        "pdf_page": 183
+    },
+    {
+        "title": "16. Electrical Systems",
+        "location": "16. Electrical Systems",
+        "pdf_page": 207
+    },
+    {
+        "title": "17. Electronic Systems (deleted)",
+        "location": "17. Electronic Systems (deleted)",
+        "pdf_page": 5
+    },
+    {
+        "title": "18. Structural Repair",
+        "location": "18. Structural Repair",
+        "pdf_page": 249
+    },
+    {
+        "title": "19. Painting",
+        "location": "19. Painting",
+        "pdf_page": 283
+    },
+    {
+        "title": "20. Wiring Diagrams",
+        "location": "20. Wiring Diagrams",
+        "pdf_page": 285
+    }
+]

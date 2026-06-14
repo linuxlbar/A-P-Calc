@@ -12,14 +12,20 @@
 <body>
 
   <header>
-    <div style="position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; padding: 0 10px;">
+   <div style="position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding: 0 10px;">
       <div style="display: flex; align-items: center; gap: 12px;">
         <img src="icon-192.png" alt="App Icon" style="width: 36px; height: 36px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
         <h1 style="margin-bottom: 0;">A&P Calculator</h1>
       </div>
-      <button id="themeToggleBtn" style="position: absolute; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white; transition: transform 0.2s ease;">🌙</button>
+      
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <button id="wakeToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: rgba(255,255,255,0.5); transition: all 0.2s ease;" title="Keep Screen Awake">💡</button>
+        <button id="gloveToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; filter: grayscale(100%); opacity: 0.6; transition: all 0.2s ease;" title="Glove Mode">🧤</button>
+        <button id="themeToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: white; transition: transform 0.2s ease;" title="Dark Mode">🌙</button>
+      </div>
     </div>
     <nav class="tabs" style="overflow-x: auto; white-space: nowrap; display: flex; gap: 5px; padding-bottom: 5px;">
+      <button class="tab-btn" data-target="module-manuals">Manual Search</button>
       <button class="tab-btn active" data-target="module-wb">Weight & Balance</button>
       <button class="tab-btn" data-target="module-metal">Metal</button>
       <button class="tab-btn" data-target="module-elec">Electricity</button>
@@ -33,6 +39,30 @@
   </header>
 
   <main id="app-container">
+
+    <section class="calc-card" id="module-manuals" style="display: none;">
+  <h2>Fleet Reference Engine</h2>
+  
+  <div class="fleet-selector">
+    <select id="aircraftMake">
+        <option value="">1. Select Manufacturer</option>
+    </select>
+    
+    <select id="aircraftModel" disabled>
+        <option value="">2. Select Model</option>
+    </select>
+    
+    <select id="aircraftSN" disabled>
+        <option value="">3. Select S/N Range</option>
+    </select>
+</div>
+
+  <div class="input-group" style="margin-top: 15px;">
+    <input type="text" id="manualSearch" placeholder="Search procedure (e.g., 'Wheel Assembly')..." disabled>
+  </div>
+  
+  <div id="manualResults" style="margin-top: 15px;"></div>
+</section>
     
     <section class="calc-card" id="module-wb">
       <h2>Weight & Balance</h2>
@@ -78,7 +108,7 @@
 
       <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
         <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">4. Equipment Change (Alteration)</h3>
-        <div style="background-color: #e8f0fe; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+        <div class="alt-header-box">
           <h4 style="font-size: 0.9rem; margin-bottom: 8px;">Original Aircraft</h4>
           <div style="display: flex; gap: 10px;">
             <input type="number" inputmode="decimal" id="altOldWt" placeholder="Old Wt (lbs)" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
@@ -270,59 +300,6 @@
 
     <section class="calc-card" id="module-math" style="display: none;">
       <h2>General Math Tools</h2>
-      
-      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;" id="tool-standard-calc">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <h3 style="font-size: 1.1rem; margin: 0; color: var(--primary-color);">Standard Calculator</h3>
-          <button id="clearHistoryBtn" style="background: none; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 4px;">Clear History</button>
-        </div>
-        
-        <div class="input-group" style="margin-bottom: 15px;">
-          <input type="text" id="calcDisplay" inputmode="text" placeholder="0" style="font-size: 1.5rem; text-align: right; font-family: monospace; padding: 1rem; font-weight: bold; letter-spacing: 2px;">
-        </div>
-        
-        <div class="calc-grid">
-          <button class="action-btn calc-btn" data-val="C" style="background-color: #ef4444;">C</button>
-          <button class="action-btn calc-btn" data-val="()" style="background-color: var(--text-muted);">( )</button>
-          <button class="action-btn calc-btn" data-val="%" style="background-color: var(--text-muted);">%</button>
-          <button class="action-btn calc-btn" data-val="/" style="background-color: var(--primary-light);">÷</button>
-          
-          <button class="action-btn calc-btn num-btn" data-val="7">7</button>
-          <button class="action-btn calc-btn num-btn" data-val="8">8</button>
-          <button class="action-btn calc-btn num-btn" data-val="9">9</button>
-          <button class="action-btn calc-btn" data-val="*" style="background-color: var(--primary-light);">×</button>
-          
-          <button class="action-btn calc-btn num-btn" data-val="4">4</button>
-          <button class="action-btn calc-btn num-btn" data-val="5">5</button>
-          <button class="action-btn calc-btn num-btn" data-val="6">6</button>
-          <button class="action-btn calc-btn" data-val="-" style="background-color: var(--primary-light);">-</button>
-          
-          <button class="action-btn calc-btn num-btn" data-val="1">1</button>
-          <button class="action-btn calc-btn num-btn" data-val="2">2</button>
-          <button class="action-btn calc-btn num-btn" data-val="3">3</button>
-          <button class="action-btn calc-btn" data-val="+" style="background-color: var(--primary-light);">+</button>
-          
-          <button class="action-btn calc-btn num-btn" data-val="0" style="grid-column: span 2;">0</button>
-          <button class="action-btn calc-btn num-btn" data-val=".">.</button>
-          <button class="action-btn calc-btn" data-val="=" style="background-color: var(--accent-color);">=</button>
-        </div>
-
-        <div id="calcHistoryContainer" class="calc-history-container">
-           <div style="padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No history yet</div>
-        </div>
-        
-        <div class="result-display" style="display: none;"><span id="calcHiddenResult">--</span></div>
-      </div>
-
-      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
-        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Fraction ↔ Decimal</h3>
-        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Enter a decimal (<code>0.125</code>) OR a fraction (<code>1/8</code>)</p>
-        <div class="input-group"><input type="text" id="fracDecInput" placeholder="e.g., 0.125 or 1/8"></div>
-        <button id="convFracBtn" class="action-btn">Convert</button>
-        <button class="action-btn local-clear-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
-        <div class="result-display" style="margin-top: 10px;"><strong>Converted: </strong><span id="fracRes">--</span></div>
-      </div>
 
       <div style="padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
         <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Percentage Calculator</h3>
@@ -605,7 +582,7 @@
           <button class="color-btn" data-color="#ef4444" style="background-color: #ef4444;" title="Red"></button>
           <button class="color-btn" data-color="#22c55e" style="background-color: #22c55e;" title="Green"></button>
           <button class="color-btn" data-color="#000000" style="background-color: #000000;" title="Black"></button>
-          <button class="color-btn eraser-btn" data-color="#ffffff" style="background-color: #ffffff; color: var(--text-main); font-weight: bold;">Eraser</button>
+          <button class="color-btn eraser-btn" data-color="#ffffff">Eraser</button>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -625,6 +602,7 @@
 
       <div class="sub-tabs">
         <button class="sub-tab-btn active ref-tab-btn" data-filter="all">All</button>
+        <button class="sub-tab-btn ref-tab-btn" data-filter="tools">Tool Drawer</button>
         <button class="sub-tab-btn ref-tab-btn" data-filter="wb">W&B</button>
         <button class="sub-tab-btn ref-tab-btn" data-filter="metal">Metal</button>
         <button class="sub-tab-btn ref-tab-btn" data-filter="elec">Electricity</button>
@@ -827,18 +805,147 @@
           <code class="formula-block">°R = °F + 459.67</code>
         </div>
 
+        <div class="ref-item" data-category="tools" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Tool Drawer Formulas</h3>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Torque Wrench Extension:</p>
+          <code class="formula-block">Indicated Torque = (Target Torque × Wrench Length) ÷ (Wrench Length + Extension Length)</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Torque Conversions:</p>
+          <code class="formula-block">in-lb = ft-lb × 12<br>ft-lb = in-lb ÷ 12</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Metric ↔ Imperial:</p>
+          <code class="formula-block">mm = inches × 25.4<br>inches = mm ÷ 25.4</code>
+        </div>
+
     </section>
 
   </main>
 
   <footer>
     <p>Developed By: Logan Barker</p>
-    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; letter-spacing: 0.5px;">Version 1.1.0</p>
+    <p id="app-version" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; letter-spacing: 0.5px;">Version 1.0.0</p>
     <button id="openLegalBtn" style="background: none; border: none; color: var(--accent-color); text-decoration: underline; cursor: pointer; font-size: 0.8rem; margin-top: 10px;">Legal & Disclaimer</button>
   </footer>
 
-  <script src="app.js"></script>
+  <div id="drawerOverlay" class="drawer-overlay"></div>
   
+  <div id="notesDrawer" class="notes-drawer">
+    <div id="notesTab" class="notes-tab">
+      <span style="transform: rotate(90deg); white-space: nowrap; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">NOTES</span>
+    </div>
+    
+    <div class="drawer-content-scroll" style="display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+        <h3 style="color: #f59e0b; margin: 0; font-size: 1.2rem;">Notes</h3>
+        <button id="clearNotesBtn" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Clear All</button>
+      </div>
+      
+      <textarea id="hangarNotesArea" placeholder="Take notes here..." style="flex-grow: 1; width: 100%; resize: none; padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background-color: #fafafa; color: var(--text-main); font-family: monospace; font-size: 1rem; line-height: 1.5; outline: none;"></textarea>
+      
+      <button id="copyNotesBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 15px; flex-shrink: 0;">Copy to Clipboard</button>
+    </div>
+  </div>
+
+  <div id="quickDrawer" class="quick-drawer">
+    <div id="drawerTab" class="drawer-tab">
+      <span style="transform: rotate(-90deg); white-space: nowrap; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">TOOLS</span>
+    </div>
+
+    <div class="drawer-content-scroll">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+        <h3 style="color: var(--primary-color); margin: 0; font-size: 1.2rem;">Quick Tools</h3>
+        <button id="resetDrawerBtn" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Reset All</button>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;" id="tool-standard-calc">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="font-size: 1.1rem; margin: 0; color: var(--primary-color);">Calculator</h3>
+          <button id="clearHistoryBtn" style="background: none; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 4px;">Clear History</button>
+        </div>
+        <div class="input-group" style="margin-bottom: 15px;">
+          <input type="text" id="calcDisplay" inputmode="text" placeholder="0" style="font-size: 1.5rem; text-align: right; font-family: monospace; padding: 1rem; font-weight: bold; letter-spacing: 2px;">
+        </div>
+        <div class="calc-grid">
+          <button class="action-btn calc-btn" data-val="C" style="background-color: #ef4444;">C</button>
+          <button class="action-btn calc-btn" data-val="()" style="background-color: var(--text-muted);">( )</button>
+          <button class="action-btn calc-btn" data-val="%" style="background-color: var(--text-muted);">%</button>
+          <button class="action-btn calc-btn" data-val="/" style="background-color: var(--primary-light);">÷</button>
+          <button class="action-btn calc-btn num-btn" data-val="7">7</button>
+          <button class="action-btn calc-btn num-btn" data-val="8">8</button>
+          <button class="action-btn calc-btn num-btn" data-val="9">9</button>
+          <button class="action-btn calc-btn" data-val="*" style="background-color: var(--primary-light);">×</button>
+          <button class="action-btn calc-btn num-btn" data-val="4">4</button>
+          <button class="action-btn calc-btn num-btn" data-val="5">5</button>
+          <button class="action-btn calc-btn num-btn" data-val="6">6</button>
+          <button class="action-btn calc-btn" data-val="-" style="background-color: var(--primary-light);">-</button>
+          <button class="action-btn calc-btn num-btn" data-val="1">1</button>
+          <button class="action-btn calc-btn num-btn" data-val="2">2</button>
+          <button class="action-btn calc-btn num-btn" data-val="3">3</button>
+          <button class="action-btn calc-btn" data-val="+" style="background-color: var(--primary-light);">+</button>
+          <button class="action-btn calc-btn num-btn" data-val="0" style="grid-column: span 2;">0</button>
+          <button class="action-btn calc-btn num-btn" data-val=".">.</button>
+          <button class="action-btn calc-btn" data-val="=" style="background-color: var(--accent-color);">=</button>
+        </div>
+        <div id="calcHistoryContainer" class="calc-history-container">
+           <div style="padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No history yet</div>
+        </div>
+        <div class="result-display" style="display: none;"><span id="calcHiddenResult">--</span></div>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Torque Wrench Ext.</h3>
+        <div class="input-group" style="margin-bottom: 8px;">
+          <input type="number" inputmode="decimal" id="twTarget" placeholder="Target Torque (T)">
+        </div>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+          <input type="number" inputmode="decimal" id="twLength" placeholder="Wrench (L)" style="width: 100%; padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.95rem;">
+          <input type="number" inputmode="decimal" id="twExt" placeholder="Ext (E)" style="width: 100%; padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.95rem;">
+        </div>
+        <div style="background: var(--card-bg); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); text-align: center;">
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Set Wrench Dial To:</span><br>
+          <strong id="twResult" style="font-size: 1.3rem; color: var(--accent-color);">--</strong>
+        </div>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+        <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--primary-color);">Quick Converters</h3>
+
+        <div class="input-group" style="margin-bottom: 15px;">
+          <label>Torque (in-lb ↔ ft-lb)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="qcInLbs" placeholder="in-lb">
+            <input type="number" inputmode="decimal" id="qcFtLbs" placeholder="ft-lb">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom: 15px;">
+          <label>Temp (°C ↔ °F)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="qcCelsius" placeholder="°C">
+            <input type="number" inputmode="decimal" id="qcFahrenheit" placeholder="°F">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom: 15px;">
+          <label>Fraction ↔ Decimal</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="qcFrac" placeholder="e.g. 5/16">
+            <input type="number" inputmode="decimal" id="qcDec" placeholder="Dec">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom: 0;">
+          <label>Metric ↔ Imperial</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="qcMm" placeholder="mm">
+            <input type="number" inputmode="decimal" id="qcInches" placeholder="in">
+          </div>
+        </div>
+      </div>
+    </div> 
+  </div> <script src="app.js"></script>
+
   <div id="imgModal" class="img-modal">
     <span class="close-modal">&times;</span>
     <div class="modal-content-container">
@@ -854,7 +961,7 @@
         <strong>NOTICE:</strong> This application is provided for <strong>educational and training purposes only</strong>.
       </p>
       <p style="margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.6;">
-        It is not an FAA-approved tool, and it does not supersede, replace, or override official manufacturer maintenance manuals, Illustrated Parts Catalogs (IPC), or FAA Advisory Circulars. 
+        It is not an FAA-approved tool, and it does not supersede, replace, or override official manufacturer maintenance manuals, Illustrated Parts Catalogs (IPC), or FAA Advisory Circulars.
       </p>
       <p style="margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.6;">
         Users must independently verify all calculations and data against the official technical data for the specific aircraft being serviced before performing any maintenance actions. The developer assumes no liability for any errors, omissions, or consequences resulting from the use of this software.

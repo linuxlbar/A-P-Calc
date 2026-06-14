@@ -1,0 +1,410 @@
+{
+    "CESSNA": {
+        "100": [
+            {
+                "range": "ALL",
+                "file": "cessna_100_master_index.json"
+            }
+        ],
+        "150": [
+            {
+                "range": "FA1500001 - FA1500081",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "1500001 - A1500226",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "FA1500082 - FA1500120",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "FA1500121 - FA1500166",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "FA1500167 - FA1500211",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "FA1500212 - FA1500261",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "FA1500262 - FA1500281",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "1500277 - 1500339",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "1500340 - 41500430",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "1500431 - 41500523",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "A1500524 - 1500609",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "A1500610 - REIMS",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15000390 - F15000529",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "F15000530 - F15000658",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15000659 - F15000738",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15000864 - F15001013",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "F15001014 - F15001143",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "F15001144 - F15001248",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "F15001249 - MUTER",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15069309 - 15071128",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15071129 - 15072003",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15072004 - 15072628",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15072629 - 15073661",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15073662 - 15074850",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15074851 - 15075781",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "15075782 - 15077005",
+                "file": "cessna_150_master_index.json"
+            },
+            {
+                "range": "41500227 - A1500276",
+                "file": "cessna_150_master_index.json"
+            }
+        ],
+        "152": [
+            {
+                "range": "FAIS2 - FA1520378",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "FAIS2 - FA1520358",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "FAI52 - FA1520348",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "FAI52 - FA1520373",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "A152 - 1521026",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "A152 - 1520984",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "A152 - 1520879",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "A152 - 1520949",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "FA152 - FA1520383",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "A152 - A1521015",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "A152 - 681",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "FA1520337 - FA1520347",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "FA1520388 - FA1520415",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "FA1520416 - FA1520425",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "A1520809 - 1520878",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "1521028 - 1521049",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "1979152 - 15282032",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15201449 - 15201528",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15201529 - 15201673",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15201674 - 15201808",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15201809 - 15201893",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15201894 - 15201928",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15201929 - F15201943",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "F15201944 - F15201952",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "F15201953 - F15201965",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "F15201966 - F15201980",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15282031 - 15211",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15285594 - 1983152",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15285595 - 15285833",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15285834 - 15285939",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "15285940 - 15286033",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "41500433 - 1520735",
+                "file": "cessna_152_master_index.json"
+            }
+        ]
+    },
+    "PIPER": {
+        "PA-28": [
+            {
+                "range": "ALL",
+                "file": "piper_pa-28_master_index.json"
+            }
+        ],
+        "PA-23": [
+            {
+                "range": "ALL",
+                "file": "piper_pa-23_master_index.json"
+            }
+        ]
+    },
+    "CIRRUS": {
+        "SR22": [
+            {
+                "range": "ALL",
+                "file": "cirrus_sr22_master_index.json"
+            }
+        ]
+    },
+    "BEECHCRAFT": {
+        "KING-AIR-90": [
+            {
+                "range": "LU-318 - LJ-501",
+                "file": "beechcraft_king-air-90_master_index.json"
+            },
+            {
+                "range": "LU-76 - LJ-114",
+                "file": "beechcraft_king-air-90_master_index.json"
+            },
+            {
+                "range": "EXCEPT - LJ-76",
+                "file": "beechcraft_king-air-90_master_index.json"
+            },
+            {
+                "range": "LW-1AND - AFTER",
+                "file": "beechcraft_king-air-90_master_index.json"
+            },
+            {
+                "range": "LJ-1063 - AND AFTER",
+                "file": "beechcraft_king-air-90_master_index.json"
+            },
+            {
+                "range": "LJ-1 - LJ-113",
+                "file": "beechcraft_king-air-90_master_index.json"
+            },
+            {
+                "range": "LU-502 - LJ-1062",
+                "file": "beechcraft_king-air-90_master_index.json"
+            }
+        ],
+        "SUPER-KING-AIR-200": [
+            {
+                "range": "BT-1 - BT-22",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-894 - BB-896",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BL-1 - BL-36",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BT-23 - BT-27",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BL-37 - AND AFTER",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-992 - AND AFTER",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-871 - BB-873",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-829 - BB-854",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-734 - BB-793",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-830 - BB-853",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-892 - BB-893",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-874 - BB-891",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-794 - BB-828",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-895 - BB-912",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-735 - BB-792",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BN-2 - AND AFTER",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BT-29 - AND AFTER",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-913 - BB-990",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "6B-2 - BB-733",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            }
+        ],
+        "SUPER-KING-AIR-300-1": [
+            {
+                "range": "ALL",
+                "file": "beechcraft_super-king-air-300-1_master_index.json"
+            }
+        ],
+        "SUPER-KING-AIR-300-2": [
+            {
+                "range": "ALL",
+                "file": "beechcraft_super-king-air-300-2_master_index.json"
+            }
+        ]
+    },
+    "ENSTROM": {
+        "F28A": [
+            {
+                "range": "ALL",
+                "file": "enstrom_f28a_master_index.json"
+            }
+        ]
+    },
+    "SABRELINER": {
+        "65": [
+            {
+                "range": "ALL",
+                "file": "sabreliner_65_master_index.json"
+            }
+        ]
+    }
+}

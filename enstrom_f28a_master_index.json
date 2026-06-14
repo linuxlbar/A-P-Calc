@@ -1,0 +1,117 @@
+[
+    {
+        "title": "Index",
+        "location": "Index",
+        "pdf_page": 1
+    },
+    {
+        "title": "Title Page",
+        "location": "Title Page",
+        "pdf_page": 4
+    },
+    {
+        "title": "Record of Revisions",
+        "location": "Record of Revisions",
+        "pdf_page": 6
+    },
+    {
+        "title": "Record of Temporary Revisions",
+        "location": "Record of Temporary Revisions",
+        "pdf_page": 8
+    },
+    {
+        "title": "List of Effective Pages",
+        "location": "List of Effective Pages",
+        "pdf_page": 9
+    },
+    {
+        "title": "Service Information Summary",
+        "location": "Service Information Summary",
+        "pdf_page": 10
+    },
+    {
+        "title": "List of Chapters (Table of Contents)",
+        "location": "List of Chapters (Table of Contents)",
+        "pdf_page": 11
+    },
+    {
+        "title": "Section 1 - Manual Procedures",
+        "location": "Section 1 - Manual Procedures",
+        "pdf_page": 22
+    },
+    {
+        "title": "Section 2 - General Information",
+        "location": "Section 2 - General Information",
+        "pdf_page": 26
+    },
+    {
+        "title": "Section 3 - Inspections",
+        "location": "Section 3 - Inspections",
+        "pdf_page": 43
+    },
+    {
+        "title": "Section 4 - Weight and Balance",
+        "location": "Section 4 - Weight and Balance",
+        "pdf_page": 64
+    },
+    {
+        "title": "Section 5 - Power Plant (Fuel Oil, Oil Ignition System)",
+        "location": "Section 5 - Power Plant (Fuel Oil, Oil Ignition System)",
+        "pdf_page": 75
+    },
+    {
+        "title": "Section 6 - Main Rotor Hub Assembly",
+        "location": "Section 6 - Main Rotor Hub Assembly",
+        "pdf_page": 122
+    },
+    {
+        "title": "Section 7 - Main Rotor Transmission",
+        "location": "Section 7 - Main Rotor Transmission",
+        "pdf_page": 135
+    },
+    {
+        "title": "Section 8 - Belt Drive Assembly",
+        "location": "Section 8 - Belt Drive Assembly",
+        "pdf_page": 148
+    },
+    {
+        "title": "Section 9 - Electrical Systems and Components",
+        "location": "Section 9 - Electrical Systems and Components",
+        "pdf_page": 163
+    },
+    {
+        "title": "Section 10 - Structure",
+        "location": "Section 10 - Structure",
+        "pdf_page": 179
+    },
+    {
+        "title": "Section 11 - Flight Controls",
+        "location": "Section 11 - Flight Controls",
+        "pdf_page": 203
+    },
+    {
+        "title": "Section 12 - Furnishings",
+        "location": "Section 12 - Furnishings",
+        "pdf_page": 227
+    },
+    {
+        "title": "Section 13 - Utility Systems",
+        "location": "Section 13 - Utility Systems",
+        "pdf_page": 230
+    },
+    {
+        "title": "Section 14 - Instruments",
+        "location": "Section 14 - Instruments",
+        "pdf_page": 236
+    },
+    {
+        "title": "Section 15 - Tail Rotor Drive Assembly",
+        "location": "Section 15 - Tail Rotor Drive Assembly",
+        "pdf_page": 252
+    },
+    {
+        "title": "End of TOC",
+        "location": "End of TOC",
+        "pdf_page": 275
+    }
+]

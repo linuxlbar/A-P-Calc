@@ -17,6 +17,68 @@ tabButtons.forEach(button => {
   });
 });
 
+// =========================================================================
+// 1.1 TACTILE ENGINE (HAPTICS)
+// =========================================================================
+function triggerHaptic(style = 'light') {
+    // Failsafe: Silently aborts if running on a PC that doesn't have a vibration motor
+    if (!navigator.vibrate) return;
+
+    if (style === 'light') {
+        navigator.vibrate(10); // A sharp, quick 'tick' for tabs and numbers
+    } else if (style === 'medium') {
+        navigator.vibrate(25); // A heavier 'thud' for calculation buttons
+    } else if (style === 'success') {
+        navigator.vibrate([15, 50, 20]); // A double-tap 'buzz' for copying/pasting
+    }
+}
+
+// Global click listener to automatically trigger the physical haptics
+document.addEventListener('click', (e) => {
+    // 1. Light Tick: Navigation tabs and standard calculator number pad
+    if (e.target.closest('.tab-btn') || e.target.closest('.sub-tab-btn') || e.target.closest('.calc-btn')) {
+        triggerHaptic('light');
+    } 
+    // 2. Medium Thud: Primary action buttons (Calculate, Clear, Convert)
+    else if (e.target.closest('.action-btn') && !e.target.closest('.calc-btn')) {
+        triggerHaptic('medium');
+    }
+});
+
+
+// =========================================================================
+// 1.2 SMART KEYBOARD FLOW
+// =========================================================================
+document.addEventListener('keydown', (e) => {
+    // Listen for the "Enter", "Next", or "Return" key on mobile keyboards
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+        e.preventDefault(); 
+
+        const activeModule = e.target.closest('.calc-card');
+        if (!activeModule) return;
+
+        // Map out every visible input box inside the current tool
+        const inputs = Array.from(activeModule.querySelectorAll('input:not([type="hidden"])'))
+            .filter(input => input.offsetParent !== null); // Ensures we don't jump to hidden tabs
+        
+        const currentIndex = inputs.indexOf(e.target);
+        
+        // If there is another box below this one, jump the cursor to it instantly
+        if (currentIndex > -1 && currentIndex < inputs.length - 1) {
+            inputs[currentIndex + 1].focus();
+        } else {
+            // If this is the final box, drop the keyboard and hit the 'Calculate' button automatically
+            e.target.blur(); 
+            const calcBtn = activeModule.querySelector('.action-btn:not(.local-clear-btn):not(.calc-btn)');
+            if (calcBtn) {
+                calcBtn.classList.add('active'); // Visual click effect
+                setTimeout(() => calcBtn.classList.remove('active'), 150);
+                calcBtn.click();
+            }
+        }
+    }
+});
+
 // --- 1.5 THEME TOGGLE (DARK MODE) ---
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const currentTheme = localStorage.getItem('theme') || 'light';
@@ -45,7 +107,242 @@ themeToggleBtn.addEventListener('click', () => {
     }
 });
 
-// --- 1.6 UNIVERSAL MODULE RESET ---
+// =========================================================================
+// 1.6 QUALITY OF LIFE TOOLS (Wake Lock, Glove Mode, Drawer)
+// =========================================================================
+
+// --- Wake Lock (Always Awake) ---
+let wakeLock = null;
+const wakeToggleBtn = document.getElementById('wakeToggleBtn');
+
+async function requestWakeLock() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeToggleBtn.style.color = '#fbbf24'; // Illuminates yellow
+        wakeToggleBtn.style.textShadow = '0 0 10px rgba(251, 191, 36, 0.5)';
+        triggerHaptic('light');
+    } catch (err) { console.log('Wake Lock denied by OS.'); }
+}
+
+wakeToggleBtn.addEventListener('click', () => {
+    if (wakeLock !== null) {
+        wakeLock.release().then(() => {
+            wakeLock = null;
+            wakeToggleBtn.style.color = 'rgba(255,255,255,0.5)';
+            wakeToggleBtn.style.textShadow = 'none';
+            triggerHaptic('light');
+        });
+    } else {
+        requestWakeLock();
+    }
+});
+
+// Auto-reacquire lock if you minimize the app and open it back up
+document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        wakeLock = await navigator.wakeLock.request('screen');
+    }
+});
+
+// --- Glove Mode Expansion ---
+const gloveToggleBtn = document.getElementById('gloveToggleBtn');
+const isGloveMode = localStorage.getItem('gloveMode') === 'true';
+
+if (isGloveMode) {
+    document.body.classList.add('glove-mode');
+    gloveToggleBtn.style.filter = 'none';
+    gloveToggleBtn.style.opacity = '1';
+}
+
+gloveToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('glove-mode');
+    triggerHaptic('medium');
+    
+    if (document.body.classList.contains('glove-mode')) {
+        localStorage.setItem('gloveMode', 'true');
+        gloveToggleBtn.style.filter = 'none';
+        gloveToggleBtn.style.opacity = '1';
+    } else {
+        localStorage.setItem('gloveMode', 'false');
+        gloveToggleBtn.style.filter = 'grayscale(100%)';
+        gloveToggleBtn.style.opacity = '0.6';
+    }
+});
+
+// --- Global Drawers (Tools & Notes) ---
+const quickDrawer = document.getElementById('quickDrawer');
+const drawerTab = document.getElementById('drawerTab');
+const drawerOverlay = document.getElementById('drawerOverlay');
+const resetDrawerBtn = document.getElementById('resetDrawerBtn');
+
+const notesDrawer = document.getElementById('notesDrawer');
+const notesTab = document.getElementById('notesTab');
+const hangarNotesArea = document.getElementById('hangarNotesArea');
+const clearNotesBtn = document.getElementById('clearNotesBtn');
+const copyNotesBtn = document.getElementById('copyNotesBtn');
+
+// Right Side: Tool Drawer Toggle
+function toggleDrawer() {
+    quickDrawer.classList.toggle('open');
+    if (quickDrawer.classList.contains('open')) {
+        notesDrawer.classList.remove('open'); // Close notes if open
+        drawerOverlay.classList.add('visible');
+    } else {
+        drawerOverlay.classList.remove('visible');
+    }
+    triggerHaptic('light');
+}
+
+// Left Side: Notes Drawer Toggle
+function toggleNotesDrawer() {
+    notesDrawer.classList.toggle('open');
+    if (notesDrawer.classList.contains('open')) {
+        quickDrawer.classList.remove('open'); // Close tools if open
+        drawerOverlay.classList.add('visible');
+    } else {
+        drawerOverlay.classList.remove('visible');
+    }
+    triggerHaptic('light');
+}
+
+// Universal Overlay Close
+drawerOverlay.addEventListener('click', () => {
+    quickDrawer.classList.remove('open');
+    notesDrawer.classList.remove('open');
+    drawerOverlay.classList.remove('visible');
+});
+
+drawerTab.addEventListener('click', toggleDrawer);
+notesTab.addEventListener('click', toggleNotesDrawer);
+
+// --- Hangar Notes Logic (Auto-Save Engine) ---
+// 1. Load saved notes on boot
+const savedNotes = localStorage.getItem('hangarNotesData');
+if (savedNotes) {
+    hangarNotesArea.value = savedNotes;
+}
+
+// 2. Auto-save on every keystroke
+hangarNotesArea.addEventListener('input', () => {
+    localStorage.setItem('hangarNotesData', hangarNotesArea.value);
+});
+
+// 3. Clear Notes Logic
+clearNotesBtn.addEventListener('click', () => {
+    if (confirm("Clear all hangar notes? This cannot be undone.")) {
+        hangarNotesArea.value = '';
+        localStorage.removeItem('hangarNotesData');
+        triggerHaptic('medium');
+    }
+});
+
+// 4. Copy Notes to Clipboard
+copyNotesBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(hangarNotesArea.value);
+    
+    // Visual tactile feedback
+    const originalText = copyNotesBtn.textContent;
+    copyNotesBtn.textContent = 'Copied ✓';
+    copyNotesBtn.style.backgroundColor = 'var(--success-text)';
+    triggerHaptic('success');
+    
+    setTimeout(() => {
+        copyNotesBtn.textContent = originalText;
+        copyNotesBtn.style.backgroundColor = 'var(--text-muted)';
+    }, 1500);
+});
+
+// Reset Logic
+resetDrawerBtn.addEventListener('click', () => {
+    // 1. Clear all text boxes in the drawer
+    quickDrawer.querySelectorAll('input').forEach(input => input.value = '');
+    
+    // 2. Safely reset the calculator engine variables
+    const calcHidden = document.getElementById('calcHiddenResult');
+    if (calcHidden) calcHidden.textContent = '--';
+    if (typeof parenCount !== 'undefined') parenCount = 0;
+    
+    // 3. Clear the torque extension output
+    const twRes = document.getElementById('twResult');
+    if (twRes) twRes.textContent = '--';
+    
+    triggerHaptic('medium');
+});
+
+// --- Torque Wrench Extension Calculator ---
+const twTarget = document.getElementById('twTarget');
+const twLength = document.getElementById('twLength');
+const twExt = document.getElementById('twExt');
+const twResult = document.getElementById('twResult');
+
+function calculateTorqueExt() {
+    const t = parseFloat(twTarget.value);
+    const l = parseFloat(twLength.value);
+    const e = parseFloat(twExt.value);
+
+    // Ensure all numbers exist and prevent dividing by zero
+    if (!isNaN(t) && !isNaN(l) && !isNaN(e) && (l + e) !== 0) {
+        const indicatedTorque = (t * l) / (l + e);
+        twResult.textContent = indicatedTorque.toFixed(2);
+    } else {
+        twResult.textContent = '--';
+    }
+}
+
+// Attach live listeners
+if (twTarget && twLength && twExt) {
+    [twTarget, twLength, twExt].forEach(input => {
+        input.addEventListener('input', calculateTorqueExt);
+    });
+}
+
+// --- Quick Converter Helper Function ---
+function syncInputs(id1, id2, calc1to2, calc2to1) {
+    const in1 = document.getElementById(id1);
+    const in2 = document.getElementById(id2);
+    
+    if (!in1 || !in2) return;
+
+    in1.addEventListener('input', () => {
+        const val = parseFloat(in1.value);
+        if (!isNaN(val)) in2.value = Number(calc1to2(val).toFixed(4));
+        else in2.value = '';
+    });
+
+    in2.addEventListener('input', () => {
+        const val = parseFloat(in2.value);
+        if (!isNaN(val)) in1.value = Number(calc2to1(val).toFixed(4));
+        else in1.value = '';
+    });
+}
+
+// Torque
+syncInputs('qcInLbs', 'qcFtLbs', (inLbs) => inLbs / 12, (ftLbs) => ftLbs * 12);
+// Temp
+syncInputs('qcCelsius', 'qcFahrenheit', (c) => (c * 9/5) + 32, (f) => (f - 32) * 5/9);
+// Metric / Imperial
+syncInputs('qcMm', 'qcInches', (mm) => mm / 25.4, (inches) => inches * 25.4);
+// Spacing (Fraction ↔ Decimal)
+const qcFrac = document.getElementById('qcFrac');
+const qcDec = document.getElementById('qcDec');
+
+qcFrac.addEventListener('input', () => {
+    const val = qcFrac.value;
+    if (val.includes('/')) {
+        const [n, d] = val.split('/').map(Number);
+        if (d && d !== 0) qcDec.value = (n / d).toFixed(4).replace(/\.?0+$/, '');
+    }
+});
+qcDec.addEventListener('input', () => {
+    const val = parseFloat(qcDec.value);
+    if (!isNaN(val)) {
+        // Simple decimal to fraction approximation
+        const den = 16; // Using 16ths as standard rivet spacing
+        const num = Math.round(val * den);
+        qcFrac.value = `${num}/${den}`;
+    }
+});
+// --- UNIVERSAL MODULE RESET ---
 document.querySelectorAll('.calc-card').forEach(card => {
     // Skip the Reference Library - nothing to clear there
     if (card.id === 'module-ref') return;
@@ -63,6 +360,7 @@ document.querySelectorAll('.calc-card').forEach(card => {
 
     // 3. Program the wipe logic
     resetBtn.addEventListener('click', () => {
+        triggerHaptic('medium');
         // Clear all input boxes within this specific card
         card.querySelectorAll('input').forEach(input => {
             input.value = '';
@@ -89,6 +387,7 @@ document.querySelectorAll('.calc-card').forEach(card => {
 // --- 1.7 SMART LOCAL CLEAR BUTTONS ---
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('local-clear-btn')) {
+        triggerHaptic('medium');
         const toolBlock = e.target.parentElement;
         
         // 1. Clear all inputs inside this specific tool only
@@ -426,6 +725,7 @@ function renderCalcHistory() {
             localStorage.setItem('smartClipboard', smartClipboard);
 
             // C. Tactile UI Feedback
+            triggerHaptic('success');
             const originalText = e.target.textContent;
             e.target.textContent = 'Copied ✓';
             e.target.style.backgroundColor = 'var(--success-text)';
@@ -505,33 +805,6 @@ document.querySelectorAll('.calc-btn').forEach(btn => {
 
         calcDisplay.dispatchEvent(new Event('input', { bubbles: true }));
     });
-});
-
-// Fraction ↔ Decimal Logic
-function gcd(a, b) { return b ? gcd(b, a % b) : a; }
-
-document.getElementById('convFracBtn').addEventListener('click', () => {
-    const input = document.getElementById('fracDecInput').value.trim();
-    let result = "";
-    
-    if (input.includes('/')) {
-        const parts = input.split('/');
-        if (parts.length === 2) {
-            const num = parseFloat(parts[0]);
-            const den = parseFloat(parts[1]);
-            if (den !== 0) { result = (num / den).toString(); }
-        }
-    } else {
-        const dec = parseFloat(input);
-        if (!isNaN(dec)) {
-            const len = dec.toString().split('.')[1] ? dec.toString().split('.')[1].length : 0;
-            const denominator = Math.pow(10, len);
-            const numerator = dec * denominator;
-            const divisor = gcd(numerator, denominator);
-            result = `${numerator/divisor} / ${denominator/divisor}`;
-        }
-    }
-    document.getElementById('fracRes').textContent = result || "Invalid input";
 });
 
 // Proportions & Ratios Logic
@@ -1600,6 +1873,7 @@ pasteBadge.addEventListener('pointerdown', (e) => {
         activeInput.dispatchEvent(new Event('input', { bubbles: true })); 
         
         // Tactile Success Feedback
+        triggerHaptic('success');
         pasteBadge.textContent = '✓ Pasted';
         pasteBadge.style.backgroundColor = 'var(--success-text)';
         activeInput.style.borderColor = 'var(--success-text)';
@@ -1612,4 +1886,157 @@ pasteBadge.addEventListener('pointerdown', (e) => {
             }, 200);
         }, 800);
     }
+});
+
+// =========================================================================
+// 16. FLEET REFERENCE ENGINE (MULTI-MANUAL)
+// =========================================================================
+let fleetRegistry = {};
+let activeManualIndex = [];
+
+// DOM Elements
+const makeSelect = document.getElementById('aircraftMake');
+const modelSelect = document.getElementById('aircraftModel');
+const snSelect = document.getElementById('aircraftSN');
+const searchInput = document.getElementById('manualSearch');
+const resultsDiv = document.getElementById('manualResults');
+
+// 1. Load the Master Registry on startup
+fetch('fleet_registry.json')
+    .then(res => res.json())
+    .then(data => {
+        fleetRegistry = data;
+        // Populate the Make dropdown
+        Object.keys(fleetRegistry).forEach(make => {
+            const option = document.createElement('option');
+            option.value = make;
+            option.textContent = make;
+            makeSelect.appendChild(option);
+        });
+    })
+    .catch(err => console.error("Fleet Registry failed to load:", err));
+
+// 2. Handle Make Selection (Unlock Model dropdown)
+makeSelect.addEventListener('change', (e) => {
+    const selectedMake = e.target.value;
+    
+    // Reset lower fields
+    modelSelect.innerHTML = '<option value="">2. Select Model</option>';
+    snSelect.innerHTML = '<option value="">3. Select S/N Range</option>';
+    modelSelect.disabled = true;
+    snSelect.disabled = true;
+    searchInput.disabled = true;
+    searchInput.value = '';
+    resultsDiv.innerHTML = '';
+    activeManualIndex = [];
+
+    if (selectedMake && fleetRegistry[selectedMake]) {
+        // Populate Model dropdown for this Make
+        Object.keys(fleetRegistry[selectedMake]).forEach(model => {
+            const option = document.createElement('option');
+            option.value = model;
+            option.textContent = model;
+            modelSelect.appendChild(option);
+        });
+        modelSelect.disabled = false;
+    }
+});
+
+// 3. Handle Model Selection (Unlock S/N dropdown)
+modelSelect.addEventListener('change', (e) => {
+    const selectedMake = makeSelect.value;
+    const selectedModel = e.target.value;
+    
+    // Reset lower fields
+    snSelect.innerHTML = '<option value="">3. Select S/N Range</option>';
+    snSelect.disabled = true;
+    searchInput.disabled = true;
+    searchInput.value = '';
+    resultsDiv.innerHTML = '';
+    activeManualIndex = [];
+
+    if (selectedModel && fleetRegistry[selectedMake][selectedModel]) {
+        // Populate S/N ranges
+        fleetRegistry[selectedMake][selectedModel].forEach(snObj => {
+            const option = document.createElement('option');
+            option.value = snObj.file; 
+            option.textContent = snObj.range;
+            snSelect.appendChild(option);
+        });
+        snSelect.disabled = false;
+    }
+});
+
+// --- Helper Function to Render the Cards ---
+function renderManualResults(matches) {
+    resultsDiv.innerHTML = ''; 
+
+    if (!matches || matches.length === 0) {
+        resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center;">No matches found in this manual.</p>';
+        return;
+    }
+
+    matches.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'reference-card';
+        div.innerHTML = `
+            <div class="ref-title">${m.title}</div>
+            <div class="ref-badges">
+                <div class="ref-location">${m.location || 'Unknown Location'}</div>
+                <div class="ref-pdf-page">PDF Pg. ${m.pdf_page}</div>
+            </div>
+        `;
+        resultsDiv.appendChild(div);
+    });
+}
+
+// 4. Handle S/N Selection (Load the manual map AND display all)
+snSelect.addEventListener('change', (e) => {
+    const targetFile = e.target.value;
+    searchInput.disabled = true;
+    searchInput.value = '';
+    resultsDiv.innerHTML = '';
+    
+    if (targetFile) {
+        resultsDiv.innerHTML = '<p style="color: var(--text-main); text-align: center;">Loading Manual Data...</p>';
+        
+        fetch(targetFile)
+            .then(res => res.json())
+            .then(data => {
+                activeManualIndex = data;
+                searchInput.disabled = false; 
+                
+                // UPGRADE: Immediately render the entire manual table of contents
+                renderManualResults(activeManualIndex);
+                
+                if(typeof triggerHaptic === 'function') triggerHaptic('light'); 
+            })
+            .catch(err => {
+                resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading specific manual.</p>';
+                console.error(err);
+            });
+    }
+});
+
+// 5. The Search Execution (Live Filter)
+searchInput.addEventListener('input', (e) => {
+    const rawInput = e.target.value.trim();
+    
+    // UPGRADE: If the user clears the search bar, show the full manual again
+    if (rawInput === '') {
+        renderManualResults(activeManualIndex);
+        return;
+    }
+
+    const queryWords = rawInput.toLowerCase().split(/\s+/); 
+
+    // Smart Search: Check if EVERY word exists in either the title or the location
+    const matches = activeManualIndex.filter(item => {
+        let title = (item.title || "").toLowerCase();
+        let loc = (item.location || "").toLowerCase();
+        
+        return queryWords.every(word => title.includes(word) || loc.includes(word));
+    });
+
+    renderManualResults(matches);
 });
