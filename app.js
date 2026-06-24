@@ -384,6 +384,55 @@ document.querySelectorAll('.calc-card').forEach(card => {
     });
 });
 
+// =========================================================================
+// "SHOW ME HOW" X-RAY ENGINE (V2)
+// =========================================================================
+function initializeXRayEngine() {
+    document.querySelectorAll('.calc-card > div').forEach(toolBlock => {
+        
+        const inputsWithHints = toolBlock.querySelectorAll('input[data-hint]');
+        if (inputsWithHints.length === 0) return;
+
+        // 1. Physically construct the hidden hint boxes safely
+        inputsWithHints.forEach(input => {
+            const parent = input.parentElement;
+            if (parent.querySelector('.xray-hint')) return; // Skip if already built
+
+            const hintBox = document.createElement('div');
+            hintBox.className = 'xray-hint';
+            hintBox.innerHTML = `↳ ${input.getAttribute('data-hint')}`;
+            
+            if(parent.classList.contains('input-group')) {
+                parent.appendChild(hintBox);
+            } else {
+                input.insertAdjacentElement('afterend', hintBox);
+            }
+        });
+
+        // 2. Inject the Toggle Button (only if it doesn't already exist)
+        const header = toolBlock.querySelector('h3');
+        if (header && !header.querySelector('.show-me-btn')) {
+            const showMeBtn = document.createElement('button');
+            showMeBtn.className = 'show-me-btn';
+            showMeBtn.innerHTML = '💡 Show Me How';
+            
+            showMeBtn.addEventListener('click', () => {
+                toolBlock.classList.toggle('xray-active');
+                showMeBtn.classList.toggle('active');
+                showMeBtn.innerHTML = toolBlock.classList.contains('xray-active') ? 'Hide Guide' : '💡 Show Me How';
+                triggerHaptic('light');
+            });
+
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.alignItems = 'center';
+            header.style.width = '100%';
+            header.appendChild(showMeBtn);
+        }
+    });
+}
+
+
 // --- 1.7 SMART LOCAL CLEAR BUTTONS ---
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('local-clear-btn')) {
@@ -414,7 +463,47 @@ document.addEventListener('click', (e) => {
 });
 
 
+// =========================================================================
 // --- 2. WEIGHT & BALANCE MODULE ---
+// =========================================================================
+
+// --- DYNAMIC ROW DELETION LISTENER (BULLETPROOF VERSION) ---
+document.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('.remove-row-btn');
+    if (!deleteBtn) return; 
+
+    if (typeof triggerHaptic === 'function') triggerHaptic('medium');
+    
+    // 1. Added '.layer-row' to the search path
+    const row = deleteBtn.closest('.cg-row, .rem-row, .add-row, .layer-row');
+    if (row) {
+        row.remove(); 
+        
+        setTimeout(() => {
+            // 2. NEW: If a metal layer was deleted, re-number all remaining labels perfectly (1, 2, 3...)
+            if (row.classList.contains('layer-row')) {
+                let layerNum = 1;
+                document.querySelectorAll('#layers-container label').forEach(label => {
+                    label.textContent = `Layer ${layerNum} Thickness`;
+                    layerNum++;
+                });
+            }
+
+            // 3. Force the calculators to update automatically
+            const calcCgBtn = document.getElementById('calcCgBtn');
+            const calcAltBtn = document.getElementById('calcAltBtn');
+            const calcMetalBtn = document.getElementById('calcMetalBtn');
+            
+            if (calcCgBtn && row.classList.contains('cg-row')) calcCgBtn.click();
+            if (calcAltBtn && (row.classList.contains('rem-row') || row.classList.contains('add-row'))) calcAltBtn.click();
+            if (calcMetalBtn && row.classList.contains('layer-row')) calcMetalBtn.click();
+            
+            if (typeof saveOmniVault === 'function') saveOmniVault();
+        }, 50);
+    }
+});
+
+// --- 1. Single Item Solver Logic ---
 document.getElementById('calcWbBtn').addEventListener('click', () => {
     const w = parseFloat(document.getElementById('wbWeight').value);
     const a = parseFloat(document.getElementById('wbArm').value);
@@ -437,11 +526,22 @@ document.getElementById('calcWbBtn').addEventListener('click', () => {
     }
 });
 
+// --- 2. Aircraft Total CG Logic ---
 document.getElementById('addCgRowBtn').addEventListener('click', () => {
     const div = document.createElement('div');
     div.className = 'cg-row';
     div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px;';
-    div.innerHTML = `<input type="text" placeholder="Item" style="flex: 2; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"><input type="number" class="cg-weight" placeholder="W" style="flex: 1.5; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"><input type="number" class="cg-arm" placeholder="A" style="flex: 1.5; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">`;
+    div.innerHTML = `
+      <div class="input-group" style="flex: 2; margin-bottom: 0;">
+        <input type="text" placeholder="Item" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+      </div>
+      <div class="input-group" style="flex: 1.5; margin-bottom: 0;">
+        <input type="number" inputmode="decimal" class="cg-weight" placeholder="W" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+      </div>
+      <div class="input-group" style="flex: 1.5; margin-bottom: 0;">
+        <input type="number" inputmode="decimal" class="cg-arm" placeholder="A" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+      </div>
+      <button class="remove-row-btn" title="Remove">&times;</button>`;
     document.getElementById('cg-layers-container').appendChild(div);
 });
 
@@ -457,6 +557,7 @@ document.getElementById('calcCgBtn').addEventListener('click', () => {
     document.getElementById('outCg').textContent = (tM / tW).toFixed(3);
 });
 
+// --- 3. Ballast Shift Logic ---
 document.getElementById('calcBallastBtn').addEventListener('click', () => {
     const w = parseFloat(document.getElementById('balWeight').value);
     const curCg = parseFloat(document.getElementById('balCurrentCg').value);
@@ -467,11 +568,19 @@ document.getElementById('calcBallastBtn').addEventListener('click', () => {
     document.getElementById('balResult').textContent = `${bw.toFixed(2)} lbs`;
 });
 
+// --- 4. Equipment Change (Alteration) Logic ---
 document.getElementById('addRemBtn').addEventListener('click', () => {
     const div = document.createElement('div');
     div.className = 'rem-row';
     div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
-    div.innerHTML = `<input type="number" class="rem-wt" placeholder="Wt" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"><input type="number" class="rem-arm" placeholder="Arm" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">`;
+    div.innerHTML = `
+      <div class="input-group" style="flex: 1; margin-bottom: 0;">
+        <input type="number" inputmode="decimal" class="rem-wt" placeholder="Wt" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+      </div>
+      <div class="input-group" style="flex: 1; margin-bottom: 0;">
+        <input type="number" inputmode="decimal" class="rem-arm" placeholder="Arm" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+      </div>
+      <button class="remove-row-btn" title="Remove">&times;</button>`;
     document.getElementById('rem-container').appendChild(div);
 });
 
@@ -479,21 +588,35 @@ document.getElementById('addAddBtn').addEventListener('click', () => {
     const div = document.createElement('div');
     div.className = 'add-row';
     div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
-    div.innerHTML = `<input type="number" class="add-wt" placeholder="Wt" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"><input type="number" class="add-arm" placeholder="Arm" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">`;
+    div.innerHTML = `
+      <div class="input-group" style="flex: 1; margin-bottom: 0;">
+        <input type="number" inputmode="decimal" class="add-wt" placeholder="Wt" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+      </div>
+      <div class="input-group" style="flex: 1; margin-bottom: 0;">
+        <input type="number" inputmode="decimal" class="add-arm" placeholder="Arm" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+      </div>
+      <button class="remove-row-btn" title="Remove">&times;</button>`;
     document.getElementById('add-container').appendChild(div);
 });
 
 document.getElementById('calcAltBtn').addEventListener('click', () => {
     const oldW = parseFloat(document.getElementById('altOldWt').value);
     const oldCg = parseFloat(document.getElementById('altOldCg').value);
-    if (isNaN(oldW) || isNaN(oldCg)) { alert("Enter Original Wt & CG"); return; }
+    
+    // BULLETPROOF UX: Soft-fail instead of an intrusive browser alert popup
+    if (isNaN(oldW) || isNaN(oldCg)) { 
+        document.getElementById('altResWt').textContent = '--';
+        return; 
+    }
     
     let remM = 0, remW = 0, addM = 0, addW = 0;
+    
     document.querySelectorAll('.rem-row').forEach(row => {
         const w = parseFloat(row.querySelector('.rem-wt').value) || 0;
         const a = parseFloat(row.querySelector('.rem-arm').value) || 0;
         remM += (w * a); remW += w;
     });
+    
     document.querySelectorAll('.add-row').forEach(row => {
         const w = parseFloat(row.querySelector('.add-wt').value) || 0;
         const a = parseFloat(row.querySelector('.add-arm').value) || 0;
@@ -504,16 +627,6 @@ document.getElementById('calcAltBtn').addEventListener('click', () => {
     const newM = (oldW * oldCg) - remM + addM;
     document.getElementById('altResWt').textContent = newW.toFixed(2);
     document.getElementById('altResCg').textContent = (newM / newW).toFixed(2);
-});
-
-
-// --- 3. SHEET METAL MODULE ---
-document.getElementById('addLayerBtn').addEventListener('click', () => {
-    const count = document.querySelectorAll('.layer-input').length + 1;
-    const div = document.createElement('div');
-    div.className = 'input-group';
-    div.innerHTML = `<label>Layer ${count} Thickness</label><input type="number" class="layer-input" step="0.001">`;
-    document.getElementById('layers-container').appendChild(div);
 });
 
 document.getElementById('calcMetalBtn').addEventListener('click', () => {
@@ -1682,17 +1795,32 @@ function loadOmniVault() {
             });
         }
 
-        // 3. Restore Dynamic Rows (Weight & Balance / Metal)
+        // 3. Restore Dynamic Rows (With X-Ray Hint & Delete Button Protection)
         if (state.dynamic) {
             
             if (state.dynamic.cgRows && state.dynamic.cgRows.length > 0) {
                 const cgContainer = document.getElementById('cg-layers-container');
                 cgContainer.innerHTML = ''; 
-                state.dynamic.cgRows.forEach(rowData => {
+                state.dynamic.cgRows.forEach((rowData, idx) => {
+                    let hint1 = idx === 0 ? `data-hint="Name of the station or item (e.g., 'Pilot')."` : "";
+                    let hint2 = idx === 0 ? `data-hint="Weight of the item at this station."` : "";
+                    let hint3 = idx === 0 ? `data-hint="The arm (distance from datum) for this station."` : "";
+                    const removeBtn = idx > 0 ? `<button class="remove-row-btn" title="Remove">&times;</button>` : '';
+
                     const div = document.createElement('div');
                     div.className = 'cg-row';
                     div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px;';
-                    div.innerHTML = `<input type="text" placeholder="Item" value="${rowData.item}" style="flex: 2; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;"><input type="number" inputmode="decimal" class="cg-weight" placeholder="W" value="${rowData.w}" style="flex: 1.5; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;"><input type="number" inputmode="decimal" class="cg-arm" placeholder="A" value="${rowData.a}" style="flex: 1.5; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;">`;
+                    div.innerHTML = `
+                        <div class="input-group" style="flex: 2; margin-bottom: 0;">
+                            <input type="text" placeholder="Item" value="${rowData.item}" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;" ${hint1}>
+                        </div>
+                        <div class="input-group" style="flex: 1.5; margin-bottom: 0;">
+                            <input type="number" inputmode="decimal" class="cg-weight" placeholder="W" value="${rowData.w}" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;" ${hint2}>
+                        </div>
+                        <div class="input-group" style="flex: 1.5; margin-bottom: 0;">
+                            <input type="number" inputmode="decimal" class="cg-arm" placeholder="A" value="${rowData.a}" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;" ${hint3}>
+                        </div>
+                        ${removeBtn}`;
                     cgContainer.appendChild(div);
                 });
             }
@@ -1700,11 +1828,22 @@ function loadOmniVault() {
             if (state.dynamic.remRows && state.dynamic.remRows.length > 0) {
                 const remContainer = document.getElementById('rem-container');
                 remContainer.querySelectorAll('.rem-row').forEach(e => e.remove());
-                state.dynamic.remRows.forEach(rowData => {
+                state.dynamic.remRows.forEach((rowData, idx) => {
+                    let hint1 = idx === 0 ? `data-hint="Weight of the removed item."` : "";
+                    let hint2 = idx === 0 ? `data-hint="Arm where it used to be."` : "";
+                    const removeBtn = idx > 0 ? `<button class="remove-row-btn" title="Remove">&times;</button>` : '';
+
                     const div = document.createElement('div');
                     div.className = 'rem-row';
                     div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
-                    div.innerHTML = `<input type="number" inputmode="decimal" class="rem-wt" placeholder="Wt" value="${rowData.w}" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"><input type="number" inputmode="decimal" class="rem-arm" placeholder="Arm" value="${rowData.a}" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">`;
+                    div.innerHTML = `
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <input type="number" inputmode="decimal" class="rem-wt" placeholder="Wt" value="${rowData.w}" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);" ${hint1}>
+                        </div>
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <input type="number" inputmode="decimal" class="rem-arm" placeholder="Arm" value="${rowData.a}" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);" ${hint2}>
+                        </div>
+                        ${removeBtn}`;
                     remContainer.appendChild(div);
                 });
             }
@@ -1712,11 +1851,22 @@ function loadOmniVault() {
             if (state.dynamic.addRows && state.dynamic.addRows.length > 0) {
                 const addContainer = document.getElementById('add-container');
                 addContainer.querySelectorAll('.add-row').forEach(e => e.remove());
-                state.dynamic.addRows.forEach(rowData => {
+                state.dynamic.addRows.forEach((rowData, idx) => {
+                    let hint1 = idx === 0 ? `data-hint="Weight of the new item."` : "";
+                    let hint2 = idx === 0 ? `data-hint="Arm where it is installed."` : "";
+                    const removeBtn = idx > 0 ? `<button class="remove-row-btn" title="Remove">&times;</button>` : '';
+
                     const div = document.createElement('div');
                     div.className = 'add-row';
                     div.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
-                    div.innerHTML = `<input type="number" inputmode="decimal" class="add-wt" placeholder="Wt" value="${rowData.w}" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"><input type="number" inputmode="decimal" class="add-arm" placeholder="Arm" value="${rowData.a}" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">`;
+                    div.innerHTML = `
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <input type="number" inputmode="decimal" class="add-wt" placeholder="Wt" value="${rowData.w}" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);" ${hint1}>
+                        </div>
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <input type="number" inputmode="decimal" class="add-arm" placeholder="Arm" value="${rowData.a}" style="width: 100%; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);" ${hint2}>
+                        </div>
+                        ${removeBtn}`;
                     addContainer.appendChild(div);
                 });
             }
@@ -1725,13 +1875,33 @@ function loadOmniVault() {
                 const layerContainer = document.getElementById('layers-container');
                 layerContainer.innerHTML = '';
                 state.dynamic.metalLayers.forEach((val, idx) => {
-                    const div = document.createElement('div');
-                    div.className = 'input-group';
-                    div.innerHTML = `<label>Layer ${idx + 1} Thickness</label><input type="number" inputmode="decimal" class="layer-input" step="0.001" value="${val}">`;
-                    layerContainer.appendChild(div);
+                    let hint = "";
+                    if(idx === 0) hint = `data-hint="The thickness of the top piece of sheet metal (e.g., 0.032)."`;
+                    if(idx === 1) hint = `data-hint="The thickness of the bottom piece of sheet metal (e.g., 0.040)."`;
+
+                    // Protect Layers 1 and 2 (No delete button allowed)
+                    if (idx < 2) {
+                        const div = document.createElement('div');
+                        div.className = 'input-group';
+                        div.innerHTML = `<label>Layer ${idx + 1} Thickness</label><input type="number" inputmode="decimal" class="layer-input" step="0.001" value="${val}" ${hint}>`;
+                        layerContainer.appendChild(div);
+                    } else {
+                        // Layers 3+ get the Flex layout with the Delete Button
+                        const div = document.createElement('div');
+                        div.className = 'layer-row';
+                        div.style.cssText = 'display: flex; gap: 8px; align-items: flex-end; margin-bottom: 1.2rem;';
+                        div.innerHTML = `
+                            <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Layer ${idx + 1} Thickness</label>
+                                <input type="number" inputmode="decimal" class="layer-input" step="0.001" value="${val}">
+                            </div>
+                            <button class="remove-row-btn" title="Remove" style="height: 48px;">&times;</button>
+                        `;
+                        layerContainer.appendChild(div);
+                    }
                 });
             }
-        }
+        } // <-- This is the missing brace!
 
         // 4. Restore the Sketchpad
         if (state.sketchpad && typeof elements !== 'undefined' && typeof redraw === 'function') {
@@ -1739,7 +1909,7 @@ function loadOmniVault() {
             redraw();
         }
 
-        // 5. Trigger Visual Updates for specific interactive UI elements
+        // 5. Trigger Visual Updates 
         const rulerInput = document.getElementById('measureInput');
         if (rulerInput && rulerInput.value) rulerInput.dispatchEvent(new Event('input'));
         
@@ -1756,7 +1926,10 @@ function loadOmniVault() {
 // 1. Unpack the vault immediately when the app opens
 loadOmniVault();
 
-// 2. Auto-save every time a user types a number or changes a dropdown
+// 2. Build the X-Ray Tutorial Engine (Must fire AFTER OmniVault loads!)
+initializeXRayEngine();
+
+// 3. Auto-save every time a user types a number or changes a dropdown
 document.addEventListener('input', (e) => {
     if (e.target.id !== 'refSearch') saveOmniVault();
 });
