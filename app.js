@@ -629,6 +629,27 @@ document.getElementById('calcAltBtn').addEventListener('click', () => {
     document.getElementById('altResCg').textContent = (newM / newW).toFixed(2);
 });
 
+// =========================================================================
+// --- 3. SHEET METAL MODULE ---
+// =========================================================================
+
+// --- Add Layer Logic with Delete Button ---
+document.getElementById('addLayerBtn').addEventListener('click', () => {
+    const count = document.querySelectorAll('.layer-input').length + 1;
+    const div = document.createElement('div');
+    div.className = 'layer-row';
+    div.style.cssText = 'display: flex; gap: 8px; align-items: flex-end; margin-bottom: 1.2rem;';
+    
+    div.innerHTML = `
+        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Layer ${count} Thickness</label>
+            <input type="number" inputmode="decimal" class="layer-input" step="0.001">
+        </div>
+        <button class="remove-row-btn" title="Remove" style="height: 48px;">&times;</button>
+    `;
+    document.getElementById('layers-container').appendChild(div);
+});
+
 document.getElementById('calcMetalBtn').addEventListener('click', () => {
     let tMax = 0, tTotal = 0;
     document.querySelectorAll('.layer-input').forEach(i => { 
@@ -1901,7 +1922,7 @@ function loadOmniVault() {
                     }
                 });
             }
-        } // <-- This is the missing brace!
+        }
 
         // 4. Restore the Sketchpad
         if (state.sketchpad && typeof elements !== 'undefined' && typeof redraw === 'function') {
@@ -1921,33 +1942,15 @@ function loadOmniVault() {
     }
 }
 
-// --- BOOT & EVENT TRIGGERS ---
 
-// 1. Unpack the vault immediately when the app opens
-loadOmniVault();
 
-// 2. Build the X-Ray Tutorial Engine (Must fire AFTER OmniVault loads!)
-initializeXRayEngine();
-
-// 3. Auto-save every time a user types a number or changes a dropdown
-document.addEventListener('input', (e) => {
-    if (e.target.id !== 'refSearch') saveOmniVault();
-});
-
-// 3. Auto-save when a user clicks any button (Calculate, Clear, Add Row, Change Color)
-document.addEventListener('click', (e) => {
-    // We delay the save by 50ms so the button's action (like wiping an input) finishes first
-    if (e.target.tagName === 'BUTTON' || e.target.classList.contains('color-btn')) {
-        setTimeout(saveOmniVault, 50);
-    }
-});
-
-// 4. Auto-save when a user finishes drawing a shape on the Sketchpad
+// 6. Auto-save when a user finishes drawing a shape
 const canvasTracker = document.getElementById('drawingCanvas');
 if (canvasTracker) {
     canvasTracker.addEventListener('mouseup', saveOmniVault);
     canvasTracker.addEventListener('touchend', saveOmniVault);
 }
+
 
 // =========================================================================
 // 15. SMART CLIPBOARD ENGINE (V2)
@@ -2212,4 +2215,37 @@ searchInput.addEventListener('input', (e) => {
     });
 
     renderManualResults(matches);
+});
+
+// --- BOOT & EVENT TRIGGERS ---
+
+// 1. Unpack the vault immediately when the app opens
+loadOmniVault();
+
+// 2. Build the X-Ray Tutorial Engine (Safe execution)
+if (typeof initializeXRayEngine === 'function') {
+    initializeXRayEngine();
+}
+
+// 3. Ignite the UI (Fixes the blank screen on boot!)
+const activeTabOnBoot = document.querySelector('.tab-btn.active');
+if (activeTabOnBoot) activeTabOnBoot.click();
+
+// 4. Auto-save every time a user types a number or changes a dropdown
+document.addEventListener('input', (e) => {
+    if (e.target.id !== 'refSearch') saveOmniVault();
+});
+
+// 5. Auto-save when a user clicks any button
+document.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON' || e.target.classList.contains('color-btn')) {
+        setTimeout(saveOmniVault, 50);
+    }
+
+    // 6. Auto-save when a user finishes drawing a shape
+const canvasTracker = document.getElementById('drawingCanvas');
+if (canvasTracker) {
+    canvasTracker.addEventListener('mouseup', saveOmniVault);
+    canvasTracker.addEventListener('touchend', saveOmniVault);
+}
 });
