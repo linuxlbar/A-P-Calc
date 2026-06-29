@@ -18,7 +18,9 @@
         <h1 style="margin-bottom: 0;">A&P Calculator</h1>
       </div>
       
-      <div style="display: flex; gap: 15px; align-items: center;">
+      <div class="header-buttons" style="display: flex; gap: 15px; align-items: center;">
+        <button id="startTourBtn" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: white; transition: transform 0.2s ease;" title="App Tour">❓</button>
+        <button id="globalSearchBtn" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: white; transition: transform 0.2s ease;" title="Global Search">🔍</button>
         <button id="wakeToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: rgba(255,255,255,0.5); transition: all 0.2s ease;" title="Keep Screen Awake">💡</button>
         <button id="gloveToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; filter: grayscale(100%); opacity: 0.6; transition: all 0.2s ease;" title="Glove Mode">🧤</button>
         <button id="themeToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: white; transition: transform 0.2s ease;" title="Dark Mode">🌙</button>
@@ -33,7 +35,6 @@
       <button class="tab-btn" data-target="module-physics">Physics</button>
       <button class="tab-btn" data-target="module-temp">Temperature</button>
       <button class="tab-btn" data-target="module-measure">Measurement</button>
-      <button class="tab-btn" data-target="module-sketch">Sketchpad</button>
       <button class="tab-btn" data-target="module-ref">Tables & Formulas</button>
     </nav>
   </header>
@@ -392,6 +393,258 @@
       </div>
     </div>
   </div>
+
+  <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">AC Reactance & Impedance</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Calculates inductive/capacitive reactance and total impedance.</p>
+
+        <div class="input-group">
+          <label>Frequency (f)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="acFreq" placeholder="e.g., 400" style="flex: 2;"
+                   data-hint="The frequency of the AC power source. Aircraft power is typically 400 Hz.">
+            <select id="acFreqUnit" style="flex: 1; min-width: 80px;">
+              <option value="1">Hz</option>
+              <option value="1000">kHz</option>
+              <option value="1000000">MHz</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Resistance (R)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="acRes" placeholder="e.g., 50" style="flex: 2;"
+                   data-hint="The standard DC resistance of the circuit.">
+            <select id="acResUnit" style="flex: 1; min-width: 80px;">
+              <option value="1">Ω</option>
+              <option value="1000">kΩ</option>
+              <option value="1000000">MΩ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Inductance (L)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="acInd" placeholder="e.g., 5" style="flex: 2;"
+                   data-hint="The inductance of the coil. Select mH (millihenries) or µH (microhenries) from the dropdown.">
+            <select id="acIndUnit" style="flex: 1; min-width: 80px;">
+              <option value="1">H</option>
+              <option value="0.001" selected>mH</option>
+              <option value="0.000001">µH</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Capacitance (C)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="acCap" placeholder="e.g., 2.2" style="flex: 2;"
+                   data-hint="The capacitance value. Microfarads (µF) are automatically selected as they are the most common.">
+            <select id="acCapUnit" style="flex: 1; min-width: 80px;">
+              <option value="1">F</option>
+              <option value="0.001">mF</option>
+              <option value="0.000001" selected>µF</option>
+              <option value="0.000000001">nF</option>
+              <option value="0.000000000001">pF</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="calcAcBtn" class="action-btn">Calculate AC Values</button>
+        <button class="action-btn local-clear-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
+
+        <div class="result-display" style="margin-top: 15px; text-align: left; padding: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Inductive Reactance (X<sub>L</sub>):</span>
+            <strong id="outXl" style="font-size: 1.1rem;">-- Ω</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Capacitive Reactance (X<sub>C</sub>):</span>
+            <strong id="outXc" style="font-size: 1.1rem;">-- Ω</strong>
+          </div>
+          <hr style="border-top: 1px solid rgba(0,0,0,0.1); margin: 8px 0;">
+          <div style="display: flex; justify-content: space-between; color: var(--primary-color);">
+            <span><strong>Total Impedance (Z):</strong></span>
+            <strong id="outZ" style="font-size: 1.3rem;">-- Ω</strong>
+          </div>
+        </div>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">AWG Wire Size Estimator</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Calculates gauge based on AC 43.13-1B limits (Voltage Drop & Ampacity).</p>
+
+        <div class="input-group">
+          <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>System Volts</label>
+            <input type="number" inputmode="decimal" id="wireSysVolt" placeholder="e.g., 28" 
+                   data-hint="The operating voltage. Standard aircraft use 14, 28, 115, or 200.">
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Load Type</label>
+            <select id="wireLoadType" data-hint="Continuous loads operate for more than 2 minutes.">
+              <option value="cont" selected>Continuous</option>
+              <option value="int">Intermittent</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Routing Method</label>
+          <select id="wireRouting" data-hint="Bundled wires trap heat and require thicker gauges for high currents.">
+            <option value="bundle" selected>Bundled / Conduit</option>
+            <option value="free">Free Air</option>
+          </select>
+        </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Current (Amps)</label>
+            <input type="number" inputmode="decimal" id="wireAmps" placeholder="e.g., 10" 
+                   data-hint="The max current draw of the component.">
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Length (Feet)</label>
+            <input type="number" inputmode="decimal" id="wireLen" placeholder="e.g., 15" 
+                   data-hint="The physical length of the wire from the bus to the component.">
+          </div>
+        </div>
+
+        <button id="calcWireBtn" class="action-btn" style="margin-top: 15px;">Calculate Wire Size</button>
+        <button class="action-btn local-clear-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
+
+        <div class="result-display" style="margin-top: 15px; text-align: left; padding: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.95rem;">Limiting Factor:</span>
+            <strong id="wireLimitOut" style="font-size: 0.95rem; color: var(--text-muted);">--</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Estimated Drop:</span>
+            <strong id="wireDropOut" style="font-size: 1.1rem;">-- V</strong>
+          </div>
+          <hr style="border-top: 1px solid rgba(0,0,0,0.1); margin: 8px 0;">
+          <div style="display: flex; justify-content: space-between; color: var(--primary-color);">
+            <span><strong>Recommended Size:</strong></span>
+            <strong id="wireAwgOut" style="font-size: 1.3rem;">-- AWG</strong>
+          </div>
+        </div>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Resistor Color Decoder</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Supports 4, 5, and 6 band precision resistors.</p>
+
+        <div class="input-group" style="margin-bottom: 15px;">
+          <select id="resBandCount" data-hint="Select the total number of bands on the resistor.">
+            <option value="4" selected>4-Band (Standard)</option>
+            <option value="5">5-Band (Precision)</option>
+            <option value="6">6-Band (Precision + Temp Coeff)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>1st Digit</label>
+            <select id="resD1" class="res-color-select" data-hint="First digit of the value.">
+              <option value="0" data-color="#000000" data-text="#ffffff">Black (0)</option>
+              <option value="1" data-color="#8B4513" data-text="#ffffff" selected>Brown (1)</option>
+              <option value="2" data-color="#EF4444" data-text="#ffffff">Red (2)</option>
+              <option value="3" data-color="#F97316" data-text="#000000">Orange (3)</option>
+              <option value="4" data-color="#EAB308" data-text="#000000">Yellow (4)</option>
+              <option value="5" data-color="#22C55E" data-text="#ffffff">Green (5)</option>
+              <option value="6" data-color="#3B82F6" data-text="#ffffff">Blue (6)</option>
+              <option value="7" data-color="#A855F7" data-text="#ffffff">Violet (7)</option>
+              <option value="8" data-color="#6B7280" data-text="#ffffff">Gray (8)</option>
+              <option value="9" data-color="#ffffff" data-text="#000000">White (9)</option>
+            </select>
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>2nd Digit</label>
+            <select id="resD2" class="res-color-select" data-hint="Second digit of the value.">
+              <option value="0" data-color="#000000" data-text="#ffffff" selected>Black (0)</option>
+              <option value="1" data-color="#8B4513" data-text="#ffffff">Brown (1)</option>
+              <option value="2" data-color="#EF4444" data-text="#ffffff">Red (2)</option>
+              <option value="3" data-color="#F97316" data-text="#000000">Orange (3)</option>
+              <option value="4" data-color="#EAB308" data-text="#000000">Yellow (4)</option>
+              <option value="5" data-color="#22C55E" data-text="#ffffff">Green (5)</option>
+              <option value="6" data-color="#3B82F6" data-text="#ffffff">Blue (6)</option>
+              <option value="7" data-color="#A855F7" data-text="#ffffff">Violet (7)</option>
+              <option value="8" data-color="#6B7280" data-text="#ffffff">Gray (8)</option>
+              <option value="9" data-color="#ffffff" data-text="#000000">White (9)</option>
+            </select>
+          </div>
+          <div class="input-group" id="groupD3" style="flex: 1; margin-bottom: 0; display: none;">
+            <label>3rd Digit</label>
+            <select id="resD3" class="res-color-select" data-hint="Third digit (Precision resistors only).">
+              <option value="0" data-color="#000000" data-text="#ffffff" selected>Black (0)</option>
+              <option value="1" data-color="#8B4513" data-text="#ffffff">Brown (1)</option>
+              <option value="2" data-color="#EF4444" data-text="#ffffff">Red (2)</option>
+              <option value="3" data-color="#F97316" data-text="#000000">Orange (3)</option>
+              <option value="4" data-color="#EAB308" data-text="#000000">Yellow (4)</option>
+              <option value="5" data-color="#22C55E" data-text="#ffffff">Green (5)</option>
+              <option value="6" data-color="#3B82F6" data-text="#ffffff">Blue (6)</option>
+              <option value="7" data-color="#A855F7" data-text="#ffffff">Violet (7)</option>
+              <option value="8" data-color="#6B7280" data-text="#ffffff">Gray (8)</option>
+              <option value="9" data-color="#ffffff" data-text="#000000">White (9)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Multiplier</label>
+            <select id="resMult" class="res-color-select" data-hint="Multiplies the preceding digits.">
+              <option value="1" data-color="#000000" data-text="#ffffff">Black (x1)</option>
+              <option value="10" data-color="#8B4513" data-text="#ffffff">Brown (x10)</option>
+              <option value="100" data-color="#EF4444" data-text="#ffffff" selected>Red (x100)</option>
+              <option value="1000" data-color="#F97316" data-text="#000000">Orange (x1K)</option>
+              <option value="10000" data-color="#EAB308" data-text="#000000">Yellow (x10K)</option>
+              <option value="100000" data-color="#22C55E" data-text="#ffffff">Green (x100K)</option>
+              <option value="1000000" data-color="#3B82F6" data-text="#ffffff">Blue (x1M)</option>
+              <option value="0.1" data-color="#EAB308" data-text="#000000">Gold (x0.1)</option>
+              <option value="0.01" data-color="#9CA3AF" data-text="#000000">Silver (x0.01)</option>
+            </select>
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Tolerance</label>
+            <select id="resTol" class="res-color-select" data-hint="Manufacturing accuracy.">
+              <option value="1" data-color="#8B4513" data-text="#ffffff">Brown (±1%)</option>
+              <option value="2" data-color="#EF4444" data-text="#ffffff">Red (±2%)</option>
+              <option value="0.5" data-color="#22C55E" data-text="#ffffff">Green (±0.5%)</option>
+              <option value="0.25" data-color="#3B82F6" data-text="#ffffff">Blue (±0.25%)</option>
+              <option value="0.1" data-color="#A855F7" data-text="#ffffff">Violet (±0.1%)</option>
+              <option value="0.05" data-color="#6B7280" data-text="#ffffff">Gray (±0.05%)</option>
+              <option value="5" data-color="#EAB308" data-text="#000000" selected>Gold (±5%)</option>
+              <option value="10" data-color="#9CA3AF" data-text="#000000">Silver (±10%)</option>
+            </select>
+          </div>
+          <div class="input-group" id="groupTemp" style="flex: 1; margin-bottom: 0; display: none;">
+            <label>Temp Coeff</label>
+            <select id="resTemp" class="res-color-select" data-hint="How much the resistance changes per degree.">
+              <option value="100" data-color="#8B4513" data-text="#ffffff" selected>Brown (100 ppm)</option>
+              <option value="50" data-color="#EF4444" data-text="#ffffff">Red (50 ppm)</option>
+              <option value="15" data-color="#F97316" data-text="#000000">Orange (15 ppm)</option>
+              <option value="25" data-color="#EAB308" data-text="#000000">Yellow (25 ppm)</option>
+              <option value="10" data-color="#3B82F6" data-text="#ffffff">Blue (10 ppm)</option>
+              <option value="5" data-color="#A855F7" data-text="#ffffff">Violet (5 ppm)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="result-display" style="margin-top: 15px; text-align: center; padding: 15px;">
+          <p style="font-size: 0.95rem; margin-bottom: 4px; color: var(--success-text); opacity: 0.8;">Resistance Value:</p>
+          <strong id="resOutTotal" style="font-size: 1.8rem; color: var(--success-text);">-- Ω</strong>
+          <p id="resOutStandard" style="font-size: 0.95rem; margin-top: 2px; margin-bottom: 6px; color: var(--success-text); opacity: 0.9; display: none;">(-- Ω)</p>
+          <p style="font-size: 0.9rem; margin-top: 4px; color: var(--success-text);">Tolerance: <strong id="resOutTol">±--%</strong></p>
+          <p id="resOutRange" style="font-size: 0.85rem; margin-top: 4px; margin-bottom: 4px; color: var(--success-text); opacity: 0.8;">Range: --</p>
+          <p id="resOutTemp" style="font-size: 0.9rem; margin-top: 4px; font-weight: bold; color: var(--success-text); display: none;">Temp Coeff: -- ppm/K</p>
+        </div>
+      </div>
+
 </section>
 
     <section class="calc-card" id="module-math" style="display: none;">
@@ -833,8 +1086,36 @@
 
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Motor Efficiency (Watts):</p>
           <code class="formula-block" style="margin-bottom: 15px;">Watts = (Horsepower × 746) ÷ Efficiency Decimal</code>
+
+          <hr style="border-top: 1px solid var(--border-color); margin: 15px 0;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-main);">AC Circuits</h4>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Inductive Reactance (X<sub>L</sub>):</p>
+          <code class="formula-block">X<sub>L</sub> = 2 × π × f × L<br><span style="font-size: 0.75rem;">f = frequency (Hz), L = inductance (Henries)</span></code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Capacitive Reactance (X<sub>C</sub>):</p>
+          <code class="formula-block">X<sub>C</sub> = 1 ÷ (2 × π × f × C)<br><span style="font-size: 0.75rem;">f = frequency (Hz), C = capacitance (Farads)</span></code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Total Impedance (Z):</p>
+          <code class="formula-block" style="margin-bottom: 15px;">Z = √(R² + (X<sub>L</sub> - X<sub>C</sub>)²)</code>
           
           <img src="ac-wire-chart.png" alt="AC 43.13-1B Table 11-9 Wire Chart" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block; margin-top: 10px;">
+
+          <hr style="border-top: 1px solid var(--border-color); margin: 15px 0;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-main);">Resistor Color Codes</h4>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">4-Band (Standard):</p>
+          <code class="formula-block">Value = (Digit 1, Digit 2) × Multiplier<br><span style="font-size: 0.75rem;">Band 4 = Tolerance</span></code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">5-Band & 6-Band (Precision):</p>
+          <code class="formula-block">Value = (Digit 1, Digit 2, Digit 3) × Multiplier<br><span style="font-size: 0.75rem;">Band 5 = Tolerance | Band 6 = Temp Coefficient (ppm/K)</span></code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Color Values (Digits 0-9):</p>
+          <code class="formula-block" style="margin-bottom: 15px;">
+            <strong>0:</strong> Black | <strong>1:</strong> Brown | <strong>2:</strong> Red | <strong>3:</strong> Orange | <strong>4:</strong> Yellow<br>
+            <strong>5:</strong> Green | <strong>6:</strong> Blue  | <strong>7:</strong> Violet | <strong>8:</strong> Gray   | <strong>9:</strong> White<br><br>
+            <span style="font-size: 0.75rem;"><strong>Gold:</strong> ×0.1 Mult / ±5% Tol | <strong>Silver:</strong> ×0.01 Mult / ±10% Tol</span>
+          </code>
           
         </div>
 
@@ -1095,7 +1376,7 @@
         </div>
       </div>
     </div> 
-  </div> <script src="app.js"></script>
+  </div> 
 
   <div id="imgModal" class="img-modal">
     <span class="close-modal">&times;</span>
@@ -1120,6 +1401,34 @@
       <button id="agreeBtn" class="action-btn">Close</button>
     </div>
   </div>
+ 
+<div id="globalSearchOverlay" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
+    <div style="width: 90%; max-width: 600px; margin: 15vh auto 0 auto; position: relative;">
+      <input type="text" id="globalSearchInput" placeholder="Search for a tool (e.g., 'Torque', 'Gravity')..." style="width: 100%; padding: 15px 45px 15px 20px; font-size: 1.1rem; border-radius: var(--radius-lg); border: 2px solid var(--accent-color); background: var(--card-bg); color: var(--text-main); outline: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <span id="closeGlobalSearch" style="position: absolute; right: 15px; top: 12px; font-size: 1.8rem; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</span>
+      <div id="globalSearchResults" style="margin-top: 10px; background: var(--card-bg); border-radius: var(--radius-lg); max-height: 50vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5);"></div>
+    </div>
+  </div>
 
+  <div id="tourShield" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99998; cursor: default;"></div>
+  
+  <div id="tourSpotlight" style="display: none; position: absolute; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85), 0 0 0 2px var(--accent-color); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease; z-index: 99999; pointer-events: none;"></div>
+  
+  <div id="tourTooltip" style="display: none; position: absolute; width: 280px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100000; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; transform: translateY(10px);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <h4 id="tourTitle" style="color: var(--primary-color); margin: 0; font-size: 1.1rem;">Title</h4>
+      <span id="tourStepCounter" style="color: var(--text-muted); font-size: 0.8rem; font-weight: bold;">1/5</span>
+    </div>
+    <p id="tourText" style="color: var(--text-main); font-size: 0.9rem; margin-bottom: 15px; line-height: 1.4;"></p>
+    <div style="display: flex; justify-content: space-between;">
+      <button id="tourSkipBtn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem;">Skip Tour</button>
+      <div style="display: flex; gap: 8px;">
+        <button id="tourPrevBtn" style="background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; display: none;">Back</button>
+        <button id="tourNextBtn" style="background: var(--primary-color); border: none; color: white; padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold;">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

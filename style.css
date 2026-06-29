@@ -908,6 +908,16 @@ body.glove-mode .calc-btn {
 /* When the tool is activated, highlight the boxes and reveal the text */
 .xray-active .xray-hint {
   display: block;
+  border-top: 1px solid rgba(14, 165, 233, 0.3); /* Adds a subtle top line to complete the box underneath flex rows */
+}
+
+/* Apply the flat bottom and blue border to BOTH the input and select menus */
+.xray-active input[data-hint],
+.xray-active select[data-hint],
+.xray-active input[data-hint] + select {
+  border-color: var(--accent-color) !important;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0 !important; 
+  background-color: rgba(14, 165, 233, 0.02) !important;
 }
 
 .xray-active input[data-hint] {
@@ -974,4 +984,64 @@ body.glove-mode .calc-btn {
 [data-theme="dark"] .remove-row-btn:hover {
     background-color: rgba(239, 68, 68, 0.1);
     border-color: #ef4444;
+}
+
+/* =========================================================================
+   GLOBAL COMMAND PALETTE (SEARCH)
+   ========================================================================= */
+.global-search-result {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background-color 0.2s ease;
+}
+
+.global-search-result:last-child {
+    border-bottom: none;
+}
+
+.global-search-result:hover {
+    background-color: rgba(14, 165, 233, 0.05);
+}
+
+.global-search-match {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+/* The 'Target Lock' animation when scrolling to a tool */
+.search-highlight {
+    animation: highlightFlash 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes highlightFlash {
+    0% { box-shadow: 0 0 0 4px var(--accent-color); border-color: var(--accent-color); }
+    100% { box-shadow: 0 0 0 0 transparent; border-color: var(--border-color); }
+}
+
+/* =========================================================================
+   MOBILE RESPONSIVE TWEAKS
+   ========================================================================= */
+@media (max-width: 450px) {
+    /* Shrink the main title to prevent it from stacking oddly */
+    header h1 {
+        font-size: 1.1rem !important;
+        white-space: nowrap;
+    }
+    
+    /* Shrink the logo slightly */
+    header img {
+        height: 35px !important;
+    }
+
+    /* Tighten the gap between the 5 header icons */
+    .header-buttons {
+        gap: 6px !important;
+    }
+    
+    /* Shrink the icons slightly to fit them all on one line */
+    .header-buttons button {
+        font-size: 1.05rem !important;
+    }
 }
