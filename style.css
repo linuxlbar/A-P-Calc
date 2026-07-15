@@ -359,23 +359,6 @@ footer {
 }
 
 
-/* --- Sketchpad Canvas --- */
-#drawingCanvas {
-  touch-action: none; 
-  cursor: crosshair;
-}
-
-/* --- Sketchpad Color Buttons --- */
-.color-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
 .color-btn:hover {
   transform: translateY(-2px);
 }
@@ -390,19 +373,6 @@ footer {
   width: auto;
   padding: 0 12px;
   border: 1px solid var(--border-color);
-}
-
-/* --- Sketchpad Tool Buttons --- */
-.tool-btn {
-  background-color: var(--card-bg);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  padding: 0.4rem 0.8rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .tool-btn:hover {
@@ -443,11 +413,6 @@ footer {
   background: var(--bg-color); /* Drops the gradient for a solid dark background */
 }
 
-/* Fix Sketchpad Canvas contrast in Dark Mode */
-[data-theme="dark"] #drawingCanvas {
-  background-color: #262626 !important;
-  border-color: #404040 !important;
-}
 
 /* --- Micro-Interactions --- */
 

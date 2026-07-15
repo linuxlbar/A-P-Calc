@@ -108,66 +108,8 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 // =========================================================================
-// 1.6 QUALITY OF LIFE TOOLS (Wake Lock, Glove Mode, Drawer)
+// 1.6 QUALITY OF LIFE TOOLS 
 // =========================================================================
-
-// --- Wake Lock (Always Awake) ---
-let wakeLock = null;
-const wakeToggleBtn = document.getElementById('wakeToggleBtn');
-
-async function requestWakeLock() {
-    try {
-        wakeLock = await navigator.wakeLock.request('screen');
-        wakeToggleBtn.style.color = '#fbbf24'; // Illuminates yellow
-        wakeToggleBtn.style.textShadow = '0 0 10px rgba(251, 191, 36, 0.5)';
-        triggerHaptic('light');
-    } catch (err) { console.log('Wake Lock denied by OS.'); }
-}
-
-wakeToggleBtn.addEventListener('click', () => {
-    if (wakeLock !== null) {
-        wakeLock.release().then(() => {
-            wakeLock = null;
-            wakeToggleBtn.style.color = 'rgba(255,255,255,0.5)';
-            wakeToggleBtn.style.textShadow = 'none';
-            triggerHaptic('light');
-        });
-    } else {
-        requestWakeLock();
-    }
-});
-
-// Auto-reacquire lock if you minimize the app and open it back up
-document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible') {
-        wakeLock = await navigator.wakeLock.request('screen');
-    }
-});
-
-// --- Glove Mode Expansion ---
-const gloveToggleBtn = document.getElementById('gloveToggleBtn');
-const isGloveMode = localStorage.getItem('gloveMode') === 'true';
-
-if (isGloveMode) {
-    document.body.classList.add('glove-mode');
-    gloveToggleBtn.style.filter = 'none';
-    gloveToggleBtn.style.opacity = '1';
-}
-
-gloveToggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('glove-mode');
-    triggerHaptic('medium');
-    
-    if (document.body.classList.contains('glove-mode')) {
-        localStorage.setItem('gloveMode', 'true');
-        gloveToggleBtn.style.filter = 'none';
-        gloveToggleBtn.style.opacity = '1';
-    } else {
-        localStorage.setItem('gloveMode', 'false');
-        gloveToggleBtn.style.filter = 'grayscale(100%)';
-        gloveToggleBtn.style.opacity = '0.6';
-    }
-});
 
 // --- Global Drawers (Tools & Notes) ---
 const quickDrawer = document.getElementById('quickDrawer');
@@ -342,10 +284,11 @@ qcDec.addEventListener('input', () => {
         qcFrac.value = `${num}/${den}`;
     }
 });
+
 // --- UNIVERSAL MODULE RESET ---
 document.querySelectorAll('.calc-card').forEach(card => {
-    // Skip the Reference Library - nothing to clear there
-    if (card.id === 'module-ref') return;
+    // Skip the Reference Library and the FIM Engine
+    if (card.id === 'module-ref' || card.id === 'module-fim'|| card.id === 'module-cfr'|| card.id === 'module-manuals') return;
 
     const header = card.querySelector('h2');
     if (!header) return;
@@ -372,11 +315,6 @@ document.querySelectorAll('.calc-card').forEach(card => {
             output.textContent = '--';
         });
 
-        // Special handling for the Sketchpad (clears the canvas)
-        if (card.id === 'module-sketch') {
-            elements = [];
-            redraw();
-        }
         
         // Tactile feedback for the button itself
         resetBtn.style.transform = 'scale(0.9)';
@@ -1782,6 +1720,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set the flag so this logic doesn't trigger on next load
             localStorage.setItem('disclaimerAccepted', 'true');
             if (legalModal) legalModal.style.display = 'none';
+            
+            // Chain the Onboarding Tour to fire after the disclaimer is accepted
+    if (!localStorage.getItem('hasSeenTour')) {
+        setTimeout(startTour, 400); // The 400ms delay gives your disclaimer modal time to gracefully fade away before the tour begins!
+    }
         });
     }
 
@@ -1789,53 +1732,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', (event) => {
         if (event.target === legalModal) {
             legalModal.style.display = 'none';
-        }
-    });
-});
-
-// =========================================================================
-// SKETCHPAD 2.0: OBJECT-ORIENTED ENGINE
-// =========================================================================
-const canvas = document.getElementById('drawingCanvas');
-const ctx = canvas.getContext('2d');
-const clearBtn = document.getElementById('clearCanvasBtn');
-
-let currentTool = 'freehand';
-let currentColor = '#003366';
-let currentWidth = 3;
-
-// The Vault: Stores the mathematical data of everything drawn
-let elements = [];
-let isDrawing = false;
-let isDragging = false;
-let selectedElement = null;
-let startX, startY;
-
-// --- UI EVENT LISTENERS ---
-const toolBtns = document.querySelectorAll('.tool-btn');
-toolBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        toolBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentTool = btn.getAttribute('data-tool');
-        selectedElement = null; // Drop anything currently being held
-        redraw();
-    });
-});
-
-const colorBtns = document.querySelectorAll('.color-btn');
-colorBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        colorBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentColor = btn.getAttribute('data-color');
-        currentWidth = btn.classList.contains('eraser-btn') ? 15 : 3;
-        
-        // Bonus Feature: Change color of an already placed shape
-        if (selectedElement && currentTool === 'move') {
-            selectedElement.color = currentColor;
-            if (btn.classList.contains('eraser-btn')) selectedElement.width = 15;
-            redraw();
         }
     });
 });
@@ -1935,103 +1831,6 @@ function startPosition(e) {
     }
 }
 
-function draw(e) {
-    e.preventDefault();
-    const pos = getCoordinates(e);
-
-    // If grabbing something, shift all its coordinates
-    if (isDragging && selectedElement) {
-        const dx = pos.x - startX;
-        const dy = pos.y - startY;
-        
-        if (selectedElement.type === 'freehand' || selectedElement.type === 'eraser') {
-            selectedElement.points.forEach(p => { p.x += dx; p.y += dy; });
-        } else if (selectedElement.type === 'line') {
-            selectedElement.x1 += dx; selectedElement.y1 += dy;
-            selectedElement.x2 += dx; selectedElement.y2 += dy;
-        } else {
-            selectedElement.x += dx; selectedElement.y += dy;
-        }
-        
-        startX = pos.x;
-        startY = pos.y;
-        redraw();
-        return;
-    }
-
-    if (!isDrawing) return;
-
-    // Live update the coordinates of the shape currently being drawn
-    const currentShape = elements[elements.length - 1];
-
-    if (currentTool === 'freehand' || currentTool === 'eraser') {
-        currentShape.points.push({x: pos.x, y: pos.y});
-    } else if (currentTool === 'line') {
-        currentShape.x2 = pos.x; currentShape.y2 = pos.y;
-    } else if (currentTool === 'square') {
-        currentShape.w = pos.x - startX; currentShape.h = pos.y - startY;
-    } else if (currentTool === 'circle') {
-        currentShape.r = Math.sqrt(Math.pow((pos.x - startX), 2) + Math.pow((pos.y - startY), 2));
-    }
-    redraw();
-}
-
-function endPosition() {
-    isDrawing = false;
-    isDragging = false;
-    
-    // Deletes accidental empty clicks so they don't clutter the vault
-    if (elements.length > 0) {
-        const last = elements[elements.length - 1];
-        if ((last.type === 'freehand' || last.type === 'eraser') && last.points.length < 2) elements.pop();
-        else if (last.type === 'square' && last.w === 0) elements.pop();
-        else if (last.type === 'circle' && last.r === 0) elements.pop();
-        else if (last.type === 'line' && last.x1 === last.x2 && last.y1 === last.y2) elements.pop();
-    }
-    redraw();
-}
-
-// Mouse & Touch Hooks
-canvas.addEventListener('mousedown', startPosition);
-canvas.addEventListener('mouseup', endPosition);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseleave', endPosition);
-canvas.addEventListener('touchstart', startPosition, { passive: false });
-canvas.addEventListener('touchend', endPosition);
-canvas.addEventListener('touchmove', draw, { passive: false });
-
-clearBtn.addEventListener('click', () => {
-    elements = [];
-    selectedElement = null;
-    redraw();
-});
-
-// --- UNDO LOGIC ---
-const undoBtn = document.getElementById('undoBtn');
-
-function undoLastAction() {
-    if (elements.length > 0) {
-        elements.pop(); // Deletes the most recent shape from the Vault
-        selectedElement = null; // Drops the item if you were currently holding it
-        redraw(); // Repaints the screen without that item
-    }
-}
-
-undoBtn.addEventListener('click', undoLastAction);
-
-// Pro-Tip: Keyboard Shortcut (Ctrl + Z)
-document.addEventListener('keydown', (e) => {
-    // Only trigger if the sketchpad is actually visible
-    if (document.getElementById('module-sketch').style.display !== 'none') {
-        if (e.ctrlKey && e.key === 'z') {
-            undoLastAction();
-        }
-    }
-});
-
-// Boot up the engine
-redraw();
-
 // ==============================
 // 14.  GLOBAL DATA PERSISTENCE
 // ==============================
@@ -2057,8 +1856,6 @@ function saveOmniVault() {
             })),
             metalLayers: Array.from(document.querySelectorAll('.layer-input')).map(input => input.value)
         },
-        // Grab the raw mathematical data from the Sketchpad engine
-        sketchpad: typeof elements !== 'undefined' ? elements : []
     };
 
     // 1. Grab all static text, number, and dropdown inputs automatically
@@ -2208,12 +2005,6 @@ function loadOmniVault() {
             }
         }
 
-        // 4. Restore the Sketchpad
-        if (state.sketchpad && typeof elements !== 'undefined' && typeof redraw === 'function') {
-            elements = state.sketchpad;
-            redraw();
-        }
-
         // 5. Trigger Visual Updates 
         const rulerInput = document.getElementById('measureInput');
         if (rulerInput && rulerInput.value) rulerInput.dispatchEvent(new Event('input'));
@@ -2227,6 +2018,13 @@ function loadOmniVault() {
 }
 
 
+
+// 5. Auto-save when a user clicks any button
+document.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON' || e.target.classList.contains('color-btn')) {
+        setTimeout(saveOmniVault, 50);
+    }
+});
 
 // 6. Auto-save when a user finishes drawing a shape
 const canvasTracker = document.getElementById('drawingCanvas');
@@ -2655,16 +2453,6 @@ const tourSteps = [
         text: 'Tap this magnifying glass to instantly search and jump to any tool, formula, or calculator across the entire app.'
     },
     {
-        target: '#wakeToggleBtn',
-        title: 'Keep Awake',
-        text: 'Turn this on to lock your screen awake indefinitely.'
-    },
-    {
-        target: '#gloveToggleBtn',
-        title: 'Glove Mode',
-        text: 'Turn this on to disable haptics and increase the size of buttons, inputs, and text for gloved hands.'
-    },
-    {
         target: '#themeToggleBtn',
         title: 'Night Mode',
         text: 'Toggle dark mode to reduce screen glare'
@@ -2685,6 +2473,15 @@ const tourSteps = [
         text: 'Access the Fleet Reference Engine. Select your aircraft make, model, and serial number to instantly load and search its specific maintenance manuals.',
         action: () => {
             const btn = document.querySelector('.tabs .tab-btn:nth-child(1)');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-cfr"]', 
+        title: '14 CFR Index',
+        text: 'Search the complete 14 CFR database for regulations and compliance information.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-wb"]');
             if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
         }
     },
@@ -2775,7 +2572,7 @@ const tourSteps = [
                 </div>
                 <div style="display: flex; gap: 10px; align-items: start;">
                     <span style="font-size: 1.2rem; line-height: 1;">⛓️‍💥</span>
-                    <div style="line-height: 1.3;"><strong>100% Offline:</strong> No internet connection or cellular service required.</div>
+                    <div style="line-height: 1.3;"><strong>100% Offline:</strong> No internet connection or cellular service required after initial setup.</div>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: start;">
                     <span style="font-size: 1.2rem; line-height: 1;">🔒</span>
@@ -2903,6 +2700,422 @@ tourPrevBtn.addEventListener('click', () => {
 tourSkipBtn.addEventListener('click', endTour);
 if (startTourBtn) startTourBtn.addEventListener('click', startTour);
 
+
+
+// =========================================================================
+// 20. 14 CFR EXPLORER (INDEXED-DB ENGINE)
+// =========================================================================
+
+const DB_NAME = "AviationProDB";
+const STORE_NAME = "cfr_library";
+let cfrDb;
+
+const cfrSearchInput = document.getElementById('cfrSearchInput');
+const cfrResultsContainer = document.getElementById('cfrResultsContainer');
+const cfrFilterBtns = document.querySelectorAll('.cfr-filter-btn');
+const cfrStatusText = document.getElementById('cfrStatusText');
+const cfrSyncBtn = document.getElementById('cfrSyncBtn');
+
+// 1. Initialize the IndexedDB
+function initCfrDatabase() {
+    const request = indexedDB.open(DB_NAME, 1);
+
+    request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        // Create the object store if it doesn't exist. We use an auto-incrementing ID for speed.
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+            store.createIndex("part", "part", { unique: false }); // Index by Part for fast filtering
+        }
+    };
+
+    request.onsuccess = (event) => {
+        cfrDb = event.target.result;
+        checkDbStatus();
+    };
+
+    request.onerror = (event) => {
+        console.error("IndexedDB Error:", event.target.error);
+        cfrStatusText.textContent = "Error accessing offline storage.";
+        cfrStatusText.style.color = "#ef4444";
+    };
+}
+
+// 2. Check if we have data, or if we need to download it
+function checkDbStatus() {
+    const transaction = cfrDb.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const countRequest = store.count();
+
+    countRequest.onsuccess = () => {
+        const statusBlock = document.getElementById('cfrDbStatus');
+        
+        if (countRequest.result > 0) {
+            // A. Repaint the status bar green
+            cfrStatusText.textContent = `Library Ready (${countRequest.result} Regulations Offline)`;
+            cfrStatusText.style.color = "var(--success-text)";
+            statusBlock.style.borderColor = "var(--success-text)";
+            statusBlock.style.background = "rgba(34, 197, 94, 0.1)";
+            cfrSearchInput.disabled = false;
+            
+            // B. Re-enable the update button action
+            cfrSyncBtn.style.display = "block";
+            cfrSyncBtn.textContent = "Update Library";
+            cfrSyncBtn.style.background = "transparent";
+            cfrSyncBtn.style.color = "var(--success-text)";
+            cfrSyncBtn.style.border = "1px solid var(--success-text)";
+            
+            
+            // Pre-load the first few results visually
+            searchCFR('');
+
+            // C. NEW: Auto-dismiss the green box after 3 seconds
+            setTimeout(() => {
+                statusBlock.style.opacity = "0";
+                statusBlock.style.maxHeight = "0px";
+                statusBlock.style.padding = "0px";
+                statusBlock.style.marginBottom = "0px";
+                statusBlock.style.border = "none";
+            }, 3000);
+
+        } else {
+            // Reset visibility if the database is completely empty
+            statusBlock.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-color); padding: 10px; border-radius: var(--radius-sm); margin-bottom: 15px; transition: all 0.4s ease; max-height: 100px; opacity: 1; overflow: hidden;";
+            cfrStatusText.textContent = "Offline library missing. (Requires Wi-Fi)";
+            cfrStatusText.style.color = "var(--accent-color)";
+            
+            cfrSyncBtn.style.display = "block";
+            cfrSyncBtn.textContent = "Download Library";
+            cfrSyncBtn.style.background = "var(--accent-color)";
+            cfrSyncBtn.style.color = "white";
+            cfrSyncBtn.style.border = "none";
+        }
+    };
+}
+
+// 3. The Fetch & Inject Engine
+cfrSyncBtn.addEventListener('click', async () => {
+    cfrSyncBtn.style.display = "none";
+    cfrStatusText.textContent = "Downloading CFR database... Do not close app.";
+    cfrStatusText.style.color = "var(--text-main)";
+    cfrStatusText.parentElement.style.borderColor = "var(--border-color)";
+    cfrStatusText.parentElement.style.background = "var(--bg-color)";
+    
+    try {
+        const response = await fetch('cfr_data.json');
+        if (!response.ok) throw new Error("File not found");
+        
+        const data = await response.json();
+        
+        cfrStatusText.textContent = "Installing to offline vault... Please wait.";
+        
+        const transaction = cfrDb.transaction(STORE_NAME, "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        
+        // WIPE the old database completely before injecting the new one
+        store.clear();
+        
+        // Loop through the massive JSON and inject it into IndexedDB
+        data.forEach(item => store.put(item));
+
+        transaction.oncomplete = () => {
+            if (typeof triggerHaptic === 'function') triggerHaptic('success');
+            checkDbStatus();
+        };
+
+        transaction.onerror = (e) => {
+            throw new Error(e.target.error);
+        };
+
+    } catch (err) {
+        console.error(err);
+        cfrStatusText.textContent = "Download failed. Check connection.";
+        cfrStatusText.style.color = "#ef4444";
+        cfrSyncBtn.style.display = "block";
+        cfrSyncBtn.textContent = "Retry";
+    }
+});
+
+// --- 4. HIERARCHICAL ROUTING ENGINE (DRILL-DOWN) ---
+const cfrNavHeader = document.getElementById('cfrNavHeader');
+const cfrBackBtn = document.getElementById('cfrBackBtn');
+const cfrCurrentFolder = document.getElementById('cfrCurrentFolder');
+
+const partMetadata = {
+    "1": { title: "Definitions and Abbreviations", desc: "General definitions and abbreviations used throughout Title 14." },
+    "21": { title: "Certification Procedures for Products and Articles", desc: "Rules for issuing type certificates, production certificates, and airworthiness certificates." },
+    "23": { title: "Airworthiness Standards: Normal Category Airplanes", desc: "Design and airworthiness standards for normal, utility, acrobatic, and commuter category airplanes." },
+    "25": { title: "Airworthiness Standards: Transport Category Airplanes", desc: "Design and airworthiness standards for large, multi-engine transport airplanes." },
+    "27": { title: "Airworthiness Standards: Normal Category Rotorcraft", desc: "Standards for normal category helicopters." },
+    "29": { title: "Airworthiness Standards: Transport Category Rotorcraft", desc: "Standards for large, multi-engine transport helicopters." },
+    "33": { title: "Airworthiness Standards: Aircraft Engines", desc: "Design and testing standards for aircraft engines." },
+    "35": { title: "Airworthiness Standards: Propellers", desc: "Design and testing standards for aircraft propellers." },
+    "39": { title: "Airworthiness Directives", desc: "Legally enforceable rules issued by the FAA to correct an unsafe condition in a product." },
+    "43": { title: "Maintenance, Preventive Maintenance, Rebuilding, and Alteration", desc: "The core rulebook for A&P mechanics. Dictates who can perform maintenance and the standards it must meet." },
+    "45": { title: "Identification and Registration Marking", desc: "Rules for painting N-numbers and attaching data plates to aircraft and components." },
+    "47": { title: "Aircraft Registration", desc: "Requirements for registering aircraft with the FAA." },
+    "61": { title: "Certification: Pilots, Flight Instructors, and Ground Instructors", desc: "Rules for pilot certification and ratings." },
+    "65": { title: "Certification: Airmen Other Than Flight Crewmembers", desc: "Certification rules for Mechanics (A&P) and Repairmen. Defines eligibility, privileges, and limitations." },
+    "91": { title: "General Operating and Flight Rules", desc: "The primary flight rules for all aircraft operating in the US. Includes maintenance required to keep the aircraft airworthy." },
+    "119": { title: "Certification: Air Carriers and Commercial Operators", desc: "General certification requirements for airlines and charter operations." },
+    "121": { title: "Operating Requirements: Domestic, Flag, and Supplemental Operations", desc: "The strict rules governing major scheduled airlines." },
+    "125": { title: "Certification & Operations: Large Airplanes", desc: "Rules for large aircraft not operating under Part 121 or 135." },
+    "135": { title: "Operating Requirements: Commuter and On Demand", desc: "Rules for charter flights, air taxis, and some commuter operations." },
+    "145": { title: "Repair Stations", desc: "Rules for obtaining and maintaining an FAA Part 145 Certified Repair Station certificate." },
+    "147": { title: "Aviation Maintenance Technician Schools", desc: "Rules governing A&P schools, including curriculum and facility requirements." }
+};
+
+let currentCfrView = 'home'; 
+let activeCfrPart = null;
+
+// Level 1: The "Folder" View
+function renderCfrHome() {
+    currentCfrView = 'home';
+    activeCfrPart = null;
+    if (cfrNavHeader) cfrNavHeader.style.display = 'none';
+    cfrResultsContainer.innerHTML = '';
+
+    Object.keys(partMetadata).forEach(partNum => {
+        const meta = partMetadata[partNum];
+        const div = document.createElement('div');
+        div.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 10px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border-left: 4px solid var(--primary-color);';
+        
+        div.onmouseover = () => { div.style.transform = 'translateY(-2px)'; div.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)'; };
+        div.onmouseout = () => { div.style.transform = 'translateY(0)'; div.style.boxShadow = 'none'; };
+
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: bold; color: var(--primary-color); font-size: 1.2rem;">Part ${partNum}</span>
+                <span style="font-size: 1.4rem; opacity: 0.8;">📂</span>
+            </div>
+            <h4 style="color: var(--text-main); margin-bottom: 5px; font-size: 1rem;">${meta.title}</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0;">${meta.desc}</p>
+        `;
+        
+        div.addEventListener('click', () => {
+            if (typeof triggerHaptic === 'function') triggerHaptic('light');
+            cfrSearchInput.value = ''; // Clear search bar before drilling down
+            renderCfrPart(partNum);
+        });
+        
+        cfrResultsContainer.appendChild(div);
+    });
+}
+
+// Level 2: The "File" View
+function renderCfrPart(partNum) {
+    currentCfrView = 'part';
+    activeCfrPart = partNum;
+    
+    if (cfrNavHeader) {
+        cfrNavHeader.style.display = 'flex';
+        cfrCurrentFolder.textContent = `📁 Part ${partNum}`;
+    }
+    
+    cfrResultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">Loading sections...</p>';
+
+    const transaction = cfrDb.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll(); 
+
+    request.onsuccess = () => {
+        cfrResultsContainer.innerHTML = '';
+        const allData = request.result;
+        
+        const matches = allData.filter(item => item.part === partNum);
+
+        matches.sort((a, b) => {
+            const numA = parseFloat(a.section) || 0;
+            const numB = parseFloat(b.section) || 0;
+            return numA - numB;
+        });
+
+        if (matches.length === 0) {
+            cfrResultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">No sections found. Please update library.</p>';
+            return;
+        }
+
+        matches.forEach(item => {
+            const div = document.createElement('div');
+            div.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px 15px; border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;';
+            
+            div.onmouseover = () => { div.style.transform = 'translateX(4px)'; div.style.borderColor = 'var(--accent-color)'; };
+            div.onmouseout = () => { div.style.transform = 'translateX(0)'; div.style.borderColor = 'var(--border-color)'; };
+
+            const snippet = item.text.length > 90 ? item.text.substring(0, 90) + '...' : item.text;
+
+            div.innerHTML = `
+                <div style="display: flex; align-items: baseline; gap: 12px;">
+                    <span style="font-weight: bold; color: var(--accent-color); font-size: 1.05rem; white-space: nowrap; min-width: 65px;">§ ${item.section}</span>
+                    <div style="flex-grow: 1;">
+                        <h4 style="color: var(--text-main); margin: 0 0 3px 0; font-size: 0.95rem;">${item.title}</h4>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.3; margin: 0;">${snippet}</p>
+                    </div>
+                </div>
+            `;
+            
+            div.addEventListener('click', () => openCfrModal(item));
+            cfrResultsContainer.appendChild(div);
+        });
+    };
+}
+
+// Active Search: Bypasses hierarchy with Ctrl+F Highlighting
+function searchCFR(query) {
+    if (!cfrDb) return;
+    const q = query.toLowerCase().trim();
+    
+    if (q === '') {
+        if (currentCfrView === 'part' && activeCfrPart) renderCfrPart(activeCfrPart);
+        else renderCfrHome();
+        return;
+    }
+
+    if (cfrNavHeader) {
+        cfrNavHeader.style.display = 'flex';
+        cfrCurrentFolder.textContent = `🔍 Search Results`;
+    }
+    
+    cfrResultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">Searching...</p>';
+
+    const transaction = cfrDb.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll(); 
+
+    request.onsuccess = () => {
+        const allData = request.result;
+        
+        const matches = allData.filter(item => {
+            return String(item.section || '').toLowerCase().includes(q) || 
+                   String(item.title || '').toLowerCase().includes(q) || 
+                   String(item.text || '').toLowerCase().includes(q) ||
+                   (`part ${item.part}` === q); 
+        });
+
+        cfrResultsContainer.innerHTML = '';
+
+        if (matches.length === 0) {
+            cfrResultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">No regulations found.</p>';
+            return;
+        }
+
+        // HIGHLIGHT HELPER FUNCTION (Bulletproofed with String casting)
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const highlightRegex = new RegExp(`(${escapeRegExp(query.trim())})`, 'gi');
+        const highlightMatch = (text) => String(text || '').replace(highlightRegex, '<span style="background: var(--accent-color); color: white; padding: 0 3px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">$1</span>');
+
+        const renderLimit = Math.min(matches.length, 50);
+        for (let i = 0; i < renderLimit; i++) {
+            const item = matches[i];
+            const div = document.createElement('div');
+            div.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 10px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;';
+            
+            div.onmouseover = () => { div.style.transform = 'translateY(-2px)'; div.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)'; };
+            div.onmouseout = () => { div.style.transform = 'translateY(0)'; div.style.boxShadow = 'none'; };
+
+            // SMART SNIPPET: Safely handles numbers and missing text
+            let rawSnippet = "";
+            const textStr = String(item.text || '');
+            const textMatchIndex = textStr.toLowerCase().indexOf(q);
+            
+            if (textMatchIndex > -1) {
+                const start = Math.max(0, textMatchIndex - 40);
+                const end = Math.min(textStr.length, textMatchIndex + query.length + 80);
+                rawSnippet = (start > 0 ? '...' : '') + textStr.substring(start, end) + (end < textStr.length ? '...' : '');
+            } else {
+                rawSnippet = textStr.length > 120 ? textStr.substring(0, 120) + '...' : textStr;
+            }
+
+            // APPLY HIGHLIGHTS
+            const highlightedSection = highlightMatch(item.section);
+            const highlightedTitle = highlightMatch(item.title);
+            const highlightedSnippet = highlightMatch(rawSnippet);
+
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: bold; color: var(--primary-color); font-size: 1.1rem;">§ ${highlightedSection}</span>
+                    <span style="font-size: 0.75rem; background: rgba(14, 165, 233, 0.1); color: var(--accent-color); padding: 3px 8px; border-radius: 12px; font-weight: bold;">Part ${item.part}</span>
+                </div>
+                <h4 style="color: var(--text-main); margin-bottom: 8px; font-size: 0.95rem;">${highlightedTitle}</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin: 0;">${highlightedSnippet}</p>
+            `;
+            
+            div.addEventListener('click', () => openCfrModal(item, query));
+            cfrResultsContainer.appendChild(div);
+        }
+    };
+}
+
+// --- 5. CFR MODAL DETAIL ENGINE & LEGAL FORMATTER ---
+const cfrDetailModal = document.getElementById('cfrDetailModal');
+const cfrDetailBadge = document.getElementById('cfrDetailBadge');
+const cfrDetailSection = document.getElementById('cfrDetailSection');
+const cfrDetailTitle = document.getElementById('cfrDetailTitle');
+const cfrDetailText = document.getElementById('cfrDetailText');
+const closeCfrModalBtn = document.getElementById('closeCfrModalBtn');
+
+function openCfrModal(item, highlightQuery = '') {
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+    
+    cfrDetailBadge.textContent = `Part ${item.part}`;
+    cfrDetailSection.textContent = `§ ${item.section}`;
+    cfrDetailTitle.textContent = item.title;
+    
+    const textStr = String(item.text || '');
+    const paragraphs = textStr.split('\n\n');
+    let formattedHtml = '';
+    
+    paragraphs.forEach(p => {
+        let styledP = p.replace(/^(\([a-zA-Z0-9]{1,3}\))\s*/, '<strong style="color: var(--accent-color); font-size: 1.1rem; margin-right: 6px;">$1</strong>');
+        
+        if (highlightQuery && highlightQuery.trim() !== '') {
+            const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const highlightRegex = new RegExp(`(${escapeRegExp(highlightQuery.trim())})`, 'gi');
+            styledP = styledP.replace(highlightRegex, '<span style="background: var(--accent-color); color: white; padding: 0 3px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">$1</span>');
+        }
+
+        formattedHtml += `<p style="margin-bottom: 16px; padding-left: 28px; text-indent: -28px;">${styledP}</p>`;
+    });
+
+    cfrDetailText.innerHTML = formattedHtml;
+    
+    cfrDetailModal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; 
+}
+
+if (closeCfrModalBtn) {
+    closeCfrModalBtn.addEventListener('click', () => {
+        if (typeof triggerHaptic === 'function') triggerHaptic('light');
+        cfrDetailModal.style.display = 'none';
+        document.body.style.overflow = ''; 
+    });
+}
+
+window.addEventListener('click', (e) => {
+    if (e.target === cfrDetailModal) {
+        cfrDetailModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+});
+
+// --- 6. NAVIGATION LISTENERS ---
+
+if (cfrBackBtn) {
+    cfrBackBtn.addEventListener('click', () => {
+        if (typeof triggerHaptic === 'function') triggerHaptic('light');
+        if (cfrSearchInput) cfrSearchInput.value = ''; 
+        renderCfrHome(); 
+    });
+}
+
+// Re-wired the search bar listener to guarantee it fires
+if (cfrSearchInput) {
+    cfrSearchInput.addEventListener('input', (e) => searchCFR(e.target.value));
+}
+
+// Boot the database when the script loads
+initCfrDatabase();
+
 // --- BOOT & EVENT TRIGGERS ---
 
 // 1. Unpack the vault immediately when the app opens
@@ -2924,24 +3137,11 @@ document.addEventListener('input', (e) => {
 
 // 5. Auto-save when a user clicks any button
 document.addEventListener('click', (e) => {
-    if (e.target.tagName === 'BUTTON' || e.target.classList.contains('color-btn')) {
+    if (e.target.tagName === 'BUTTON') {
         setTimeout(saveOmniVault, 50);
     }
-
-    // 6. Auto-save when a user finishes drawing a shape
-const canvasTracker = document.getElementById('drawingCanvas');
-if (canvasTracker) {
-    canvasTracker.addEventListener('mouseup', saveOmniVault);
-    canvasTracker.addEventListener('touchend', saveOmniVault);
-}
 });
 
-// 7. Paint the Resistor tool on boot
+// 6. Paint the Resistor tool on boot
 setTimeout(calculateResistor, 100);
 
-// 8. Run First-Time User Onboarding Tour
-setTimeout(() => {
-    if (!localStorage.getItem('hasSeenTour')) {
-        startTour();
-    }
-}, 500); // Wait half a second for the app to settle before springing the tour
