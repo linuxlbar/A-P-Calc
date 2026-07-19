@@ -323,12 +323,13 @@ document.querySelectorAll('.calc-card').forEach(card => {
 });
 
 // =========================================================================
-// "SHOW ME HOW" X-RAY ENGINE (V3 - Dropdown Support)
+// "SHOW ME HOW" X-RAY ENGINE (V3 - Dropdown & Drawer Support)
 // =========================================================================
 function initializeXRayEngine() {
-    document.querySelectorAll('.calc-card > div').forEach(toolBlock => {
+    // UPGRADE: Scan both the main cards AND the tools inside the right drawer
+    document.querySelectorAll('.calc-card > div, #quickDrawer .drawer-content-scroll > div').forEach(toolBlock => {
         
-        // FIX: Tell the engine to look for BOTH inputs and select dropdowns!
+        // Tell the engine to look for BOTH inputs and select dropdowns!
         const inputsWithHints = toolBlock.querySelectorAll('input[data-hint], select[data-hint]');
         if (inputsWithHints.length === 0) return;
 

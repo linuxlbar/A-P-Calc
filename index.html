@@ -1355,11 +1355,16 @@
       <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
         <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Torque Wrench Ext.</h3>
         <div class="input-group" style="margin-bottom: 8px;">
-          <input type="number" inputmode="decimal" id="twTarget" placeholder="Target Torque (T)">
+          <input type="number" inputmode="decimal" id="twTarget" placeholder="Target Torque (T)" data-hint="The final torque value required by the maintenance manual.">
         </div>
         <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-          <input type="number" inputmode="decimal" id="twLength" placeholder="Wrench (L)" style="width: 100%; padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.95rem;">
-          <input type="number" inputmode="decimal" id="twExt" placeholder="Ext (E)" style="width: 100%; padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.95rem;">
+          <!-- Wrapped each input in an input-group so they get individual hint boxes -->
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <input type="number" inputmode="decimal" id="twLength" placeholder="Wrench (L)" style="width: 100%; padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.95rem;" data-hint="Distance from handle center to drive.">
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <input type="number" inputmode="decimal" id="twExt" placeholder="Ext (E)" style="width: 100%; padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.95rem;" data-hint="Length of the extension.">
+          </div>
         </div>
         <div style="background: var(--card-bg); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); text-align: center;">
           <span style="font-size: 0.85rem; color: var(--text-muted);">Set Wrench Dial To:</span><br>
@@ -1370,40 +1375,39 @@
       <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
         <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--primary-color);">Quick Converters</h3>
 
+        <!-- Added data-hint to the right-side inputs so they both highlight at the same time -->
         <div class="input-group" style="margin-bottom: 15px;">
           <label>Torque (in-lb ↔ ft-lb)</label>
           <div style="display: flex; gap: 10px;">
-            <input type="number" inputmode="decimal" id="qcInLbs" placeholder="in-lb">
-            <input type="number" inputmode="decimal" id="qcFtLbs" placeholder="ft-lb">
+            <input type="number" inputmode="decimal" id="qcInLbs" placeholder="in-lb" data-hint="Type in either box to instantly convert torque values.">
+            <input type="number" inputmode="decimal" id="qcFtLbs" placeholder="ft-lb" data-hint="Type in either box to instantly convert torque values.">
           </div>
         </div>
 
         <div class="input-group" style="margin-bottom: 15px;">
           <label>Temp (°C ↔ °F)</label>
           <div style="display: flex; gap: 10px;">
-            <input type="number" inputmode="decimal" id="qcCelsius" placeholder="°C">
-            <input type="number" inputmode="decimal" id="qcFahrenheit" placeholder="°F">
+            <input type="number" inputmode="decimal" id="qcCelsius" placeholder="°C" data-hint="Type in either box to instantly convert temperatures.">
+            <input type="number" inputmode="decimal" id="qcFahrenheit" placeholder="°F" data-hint="Type in either box to instantly convert temperatures.">
           </div>
         </div>
 
         <div class="input-group" style="margin-bottom: 15px;">
           <label>Fraction ↔ Decimal</label>
           <div style="display: flex; gap: 10px;">
-            <input type="text" id="qcFrac" placeholder="e.g. 5/16">
-            <input type="number" inputmode="decimal" id="qcDec" placeholder="Dec">
+            <input type="text" id="qcFrac" placeholder="e.g. 5/16" data-hint="Type a fraction (e.g., 5/16) to get the decimal, or a decimal to get the nearest 16th.">
+            <input type="number" inputmode="decimal" id="qcDec" placeholder="Dec" data-hint="Type a fraction (e.g., 5/16) to get the decimal, or a decimal to get the nearest 16th.">
           </div>
         </div>
 
         <div class="input-group" style="margin-bottom: 0;">
           <label>Metric ↔ Imperial</label>
           <div style="display: flex; gap: 10px;">
-            <input type="number" inputmode="decimal" id="qcMm" placeholder="mm">
-            <input type="number" inputmode="decimal" id="qcInches" placeholder="in">
+            <input type="number" inputmode="decimal" id="qcMm" placeholder="mm" data-hint="Type in either box to instantly convert mm and inches.">
+            <input type="number" inputmode="decimal" id="qcInches" placeholder="in" data-hint="Type in either box to instantly convert mm and inches.">
           </div>
         </div>
       </div>
-    </div> 
-  </div> 
 
   <div id="imgModal" class="img-modal">
     <span class="close-modal">&times;</span>
