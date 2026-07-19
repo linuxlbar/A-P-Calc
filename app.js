@@ -2442,7 +2442,7 @@ globalSearchInput.addEventListener('input', (e) => {
 });
 
 // =========================================================================
-// 18. GUIDED SPOTLIGHT TOUR ENGINE
+// 18. GUIDED SPOTLIGHT TOUR ENGINE (BULLETPROOF VERSION)
 // =========================================================================
 
 const tourSteps = [
@@ -2459,7 +2459,7 @@ const tourSteps = [
     {
         target: '#themeToggleBtn',
         title: 'Night Mode',
-        text: 'Toggle dark mode to reduce screen glare'
+        text: 'Toggle dark mode to reduce screen glare.'
     },
     {
         target: '#notesTab',
@@ -2485,7 +2485,7 @@ const tourSteps = [
         title: '14 CFR Index',
         text: 'Search the complete 14 CFR database for regulations and compliance information.',
         action: () => {
-            const btn = document.querySelector('.tab-btn[data-target="module-wb"]');
+            const btn = document.querySelector('.tab-btn[data-target="module-cfr"]'); // FIXED: Now targets CFR properly
             if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
         }
     },
@@ -2604,72 +2604,91 @@ const tourSkipBtn = document.getElementById('tourSkipBtn');
 const startTourBtn = document.getElementById('startTourBtn');
 
 function positionTourElement() {
-    const step = tourSteps[currentTourStep];
-    const targetEl = document.querySelector(step.target);
-    
-    if (!targetEl) {
-        tourNextBtn.click(); 
-        return;
+    try {
+        const step = tourSteps[currentTourStep];
+        const targetEl = document.querySelector(step.target);
+        
+        // Failsafe 1: If the button doesn't exist on the screen, skip to the next step instantly
+        if (!targetEl) {
+            console.warn(`Tour skipped missing element: ${step.target}`);
+            if (tourNextBtn) tourNextBtn.click(); 
+            return;
+        }
+
+        tourTooltip.style.opacity = '0';
+        tourTooltip.style.transform = 'translateY(10px)';
+
+        if (step.action) step.action();
+
+        setTimeout(() => {
+            const rect = targetEl.getBoundingClientRect();
+            
+            // Failsafe 2: If the element is hidden (width 0), it will break the spotlight. Skip it.
+            if (rect.width === 0) {
+                if (tourNextBtn) tourNextBtn.click();
+                return;
+            }
+
+            const padding = 6;
+
+            // Move the Spotlight to the exact new coordinates
+            tourSpotlight.style.top = `${rect.top + window.scrollY - padding}px`;
+            tourSpotlight.style.left = `${rect.left + window.scrollX - padding}px`;
+            tourSpotlight.style.width = `${rect.width + (padding * 2)}px`;
+            tourSpotlight.style.height = `${rect.height + (padding * 2)}px`;
+
+            // Populate Tooltip Data
+            tourTitle.textContent = step.title;
+            tourText.innerHTML = step.text;
+            tourStepCounter.textContent = `${currentTourStep + 1} / ${tourSteps.length}`;
+
+            // Calculate Tooltip Position
+            let tooltipTop = rect.bottom + window.scrollY + 15;
+            let tooltipLeft = rect.left + window.scrollX - (280 / 2) + (rect.width / 2);
+
+            // Bounce off edges so it never bleeds off the phone screen
+            if (tooltipLeft < 10) tooltipLeft = 10;
+            if (tooltipLeft + 280 > window.innerWidth - 10) tooltipLeft = window.innerWidth - 290;
+            if (tooltipTop + 150 > window.innerHeight + window.scrollY) tooltipTop = rect.top + window.scrollY - 160;
+
+            tourTooltip.style.top = `${tooltipTop}px`;
+            tourTooltip.style.left = `${tooltipLeft}px`;
+            
+            // Fade the Tooltip smoothly back into view
+            tourTooltip.style.opacity = '1';
+            tourTooltip.style.transform = 'translateY(0)';
+
+            // Button Logic
+            tourPrevBtn.style.display = currentTourStep === 0 ? 'none' : 'block';
+            tourNextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
+            
+        }, 350); 
+        
+    } catch (err) {
+        // ULTIMATE FAILSAFE: If a catastrophic error occurs, instantly drop the shields so the user isn't trapped
+        console.error("Tour Engine crashed, auto-closing to prevent lockup.", err);
+        endTour();
     }
-
-    // 1. Temporarily hide ONLY the tooltip. Leave the spotlight alone so the screen stays dark!
-    tourTooltip.style.opacity = '0';
-    tourTooltip.style.transform = 'translateY(10px)';
-
-    // 2. Trigger the tab switch and the smooth scroll animation
-    if (step.action) step.action();
-
-    // 3. WAIT 350 milliseconds for the scroll animation to fully stop before moving the light
-    setTimeout(() => {
-        const rect = targetEl.getBoundingClientRect();
-        const padding = 6;
-
-        // Move the Spotlight to the exact new coordinates
-        tourSpotlight.style.top = `${rect.top + window.scrollY - padding}px`;
-        tourSpotlight.style.left = `${rect.left + window.scrollX - padding}px`;
-        tourSpotlight.style.width = `${rect.width + (padding * 2)}px`;
-        tourSpotlight.style.height = `${rect.height + (padding * 2)}px`;
-
-        // Populate Tooltip Data
-        tourTitle.textContent = step.title;
-        tourText.innerHTML = step.text;
-        tourStepCounter.textContent = `${currentTourStep + 1} / ${tourSteps.length}`;
-
-        // Calculate Tooltip Position
-        let tooltipTop = rect.bottom + window.scrollY + 15;
-        let tooltipLeft = rect.left + window.scrollX - (280 / 2) + (rect.width / 2);
-
-        // Bounce off edges so it never bleeds off the phone screen
-        if (tooltipLeft < 10) tooltipLeft = 10;
-        if (tooltipLeft + 280 > window.innerWidth - 10) tooltipLeft = window.innerWidth - 290;
-        if (tooltipTop + 150 > window.innerHeight + window.scrollY) tooltipTop = rect.top + window.scrollY - 160;
-
-        tourTooltip.style.top = `${tooltipTop}px`;
-        tourTooltip.style.left = `${tooltipLeft}px`;
-        
-        // 4. Fade the Tooltip smoothly back into view
-        tourTooltip.style.opacity = '1';
-        tourTooltip.style.transform = 'translateY(0)';
-
-        // Button Logic
-        tourPrevBtn.style.display = currentTourStep === 0 ? 'none' : 'block';
-        tourNextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
-        
-    }, 350); 
 }
 
 function startTour() {
     currentTourStep = 0;
+    
+    // Un-hide the UI elements
     tourShield.style.display = 'block';
     tourSpotlight.style.display = 'block';
     tourTooltip.style.display = 'block';
+    
+    // Force the browser to register the new 'block' state before modifying opacity (prevents a rendering race condition)
+    void tourTooltip.offsetWidth; 
+    
     tourTooltip.style.opacity = '0';
     tourTooltip.style.transform = 'translateY(10px)';
     
     if (typeof triggerHaptic === 'function') triggerHaptic('medium');
     
-    // Give the UI a microsecond to render before measuring coordinates
-    setTimeout(positionTourElement, 50);
+    // Increased the delay slightly to give the DOM plenty of time to stabilize
+    setTimeout(positionTourElement, 100);
 }
 
 function endTour() {
