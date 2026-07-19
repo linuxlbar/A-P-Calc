@@ -1306,16 +1306,25 @@ document.body.addEventListener('click', function(e) {
     
     // A. Did they tap an image inside the reference module?
     if (e.target.tagName === 'IMG' && e.target.closest('#module-ref')) {
-        imgModal.style.display = 'block';
-        modalImg.src = e.target.src;
-        document.body.style.overflow = 'hidden'; // Stop background from scrolling
+        if (imgModal && modalImg) {
+            imgModal.style.display = 'block';
+            modalImg.src = e.target.src;
+            document.body.style.overflow = 'hidden'; // Stop background from scrolling
+        }
     }
     
     // B. Did they tap the dark background, the container, or the 'X' button?
-    if (e.target === imgModal || e.target.id === 'modalContainer' || e.target.id === 'closeModalBtn') {
-        imgModal.style.display = 'none';
-        modalImg.src = '';
-        document.body.style.overflow = ''; // Restore background scrolling
+    if (e.target === imgModal || 
+        e.target.id === 'modalContainer' || 
+        e.target.id === 'closeModalBtn' ||
+        e.target.classList.contains('close-modal') || 
+        e.target.classList.contains('modal-content-container')) {
+        
+        if (imgModal && modalImg) {
+            imgModal.style.display = 'none';
+            modalImg.src = '';
+            document.body.style.overflow = ''; // Restore background scrolling
+        }
     }
 });
 
@@ -2442,36 +2451,36 @@ globalSearchInput.addEventListener('input', (e) => {
 });
 
 // =========================================================================
-// 18. GUIDED SPOTLIGHT TOUR ENGINE (SELF-HEALING VERSION)
+// 18. GUIDED SPOTLIGHT TOUR ENGINE (DYNAMIC TRACKING VERSION)
 // =========================================================================
 
-// 1. Force-Inject the HTML to guarantee it exists and is formatted perfectly
-if (!document.getElementById('tourShield')) {
-    document.body.insertAdjacentHTML('beforeend', `<div id="tourShield" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99998; cursor: default;"></div>`);
-}
-if (!document.getElementById('tourSpotlight')) {
-    document.body.insertAdjacentHTML('beforeend', `<div id="tourSpotlight" style="display: none; position: absolute; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85), 0 0 0 2px var(--accent-color); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease; z-index: 99999; pointer-events: none;"></div>`);
-}
+// 1. SELF-CLEANING DOM: Destroy any old/corrupted HTML from previous versions
+['tourShield', 'tourSpotlight', 'tourTooltip'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+});
 
-// Destroy and rebuild the tooltip to ensure it hasn't been corrupted by previous copy-pastes
-const oldTooltip = document.getElementById('tourTooltip');
-if (oldTooltip) oldTooltip.remove();
-
+// 2. Inject pristine, perfectly formatted UI elements
 document.body.insertAdjacentHTML('beforeend', `
-<div id="tourTooltip" style="display: none; position: absolute; width: 280px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100000; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; transform: translateY(10px);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <h4 id="tourTitle" style="color: var(--primary-color); margin: 0; font-size: 1.1rem;">Title</h4>
-        <span id="tourStepCounter" style="color: var(--text-muted); font-size: 0.8rem; font-weight: bold;"></span>
-    </div>
-    <p id="tourText" style="color: var(--text-main); font-size: 0.9rem; margin-bottom: 15px; line-height: 1.4;"></p>
-    <div style="display: flex; justify-content: space-between;">
-        <button id="tourSkipBtn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem;">Skip Tour</button>
-        <div style="display: flex; gap: 8px;">
-            <button id="tourPrevBtn" style="background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; display: none;">Back</button>
-            <button id="tourNextBtn" style="background: var(--primary-color); border: none; color: white; padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold;">Next</button>
+    <div id="tourShield" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99998; cursor: default;"></div>
+    
+    <div id="tourSpotlight" style="display: none; position: absolute; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85), 0 0 0 2px var(--accent-color); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease; z-index: 99999; pointer-events: none;"></div>
+    
+    <div id="tourTooltip" style="display: none; position: absolute; width: 280px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100000; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; transform: translateY(10px);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h4 id="tourTitle" style="color: var(--primary-color); margin: 0; font-size: 1.1rem;">Title</h4>
+            <span id="tourStepCounter" style="color: var(--text-muted); font-size: 0.8rem; font-weight: bold;"></span>
+        </div>
+        <p id="tourText" style="color: var(--text-main); font-size: 0.9rem; margin-bottom: 15px; line-height: 1.4;"></p>
+        <div style="display: flex; justify-content: space-between;">
+            <button id="tourSkipBtn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem;">Skip Tour</button>
+            <div style="display: flex; gap: 8px;">
+                <button id="tourPrevBtn" style="background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; display: none;">Back</button>
+                <button id="tourNextBtn" style="background: var(--primary-color); border: none; color: white; padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold;">Next</button>
+            </div>
         </div>
     </div>
-</div>`);
+`);
 
 const tourSteps = [
     { target: '#startTourBtn', title: 'Tutorial', text: 'Tap this question mark anytime you might need a quick walkthrough of the app\'s features and tools.' },
@@ -2493,26 +2502,32 @@ const tourSteps = [
 ];
 
 let currentTourStep = 0;
-const tourShield = document.getElementById('tourShield');
-const tourSpotlight = document.getElementById('tourSpotlight');
-const tourTooltip = document.getElementById('tourTooltip');
-const tourTitle = document.getElementById('tourTitle');
-const tourText = document.getElementById('tourText');
-const tourStepCounter = document.getElementById('tourStepCounter');
-const tourNextBtn = document.getElementById('tourNextBtn');
-const tourPrevBtn = document.getElementById('tourPrevBtn');
-const tourSkipBtn = document.getElementById('tourSkipBtn');
-const startTourBtn = document.getElementById('startTourBtn');
+
+// Dynamic Helper: Always fetches the live elements directly from the DOM
+function getTourUI() {
+    return {
+        shield: document.getElementById('tourShield'),
+        spotlight: document.getElementById('tourSpotlight'),
+        tooltip: document.getElementById('tourTooltip'),
+        title: document.getElementById('tourTitle'),
+        text: document.getElementById('tourText'),
+        counter: document.getElementById('tourStepCounter'),
+        nextBtn: document.getElementById('tourNextBtn'),
+        prevBtn: document.getElementById('tourPrevBtn'),
+        skipBtn: document.getElementById('tourSkipBtn')
+    };
+}
 
 function endTour() {
-    if (tourShield) tourShield.style.display = 'none';
-    if (tourSpotlight) {
-        tourSpotlight.style.opacity = '0';
-        setTimeout(() => tourSpotlight.style.display = 'none', 300);
+    const ui = getTourUI();
+    if (ui.shield) ui.shield.style.display = 'none';
+    if (ui.spotlight) {
+        ui.spotlight.style.opacity = '0';
+        setTimeout(() => ui.spotlight.style.display = 'none', 300);
     }
-    if (tourTooltip) {
-        tourTooltip.style.opacity = '0';
-        setTimeout(() => tourTooltip.style.display = 'none', 400);
+    if (ui.tooltip) {
+        ui.tooltip.style.opacity = '0';
+        setTimeout(() => ui.tooltip.style.display = 'none', 400);
     }
     localStorage.setItem('hasSeenTour', 'true');
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
@@ -2522,6 +2537,7 @@ function positionTourElement() {
     try {
         const step = tourSteps[currentTourStep];
         const targetEl = document.querySelector(step.target);
+        const ui = getTourUI(); 
         
         if (!targetEl) {
             if (currentTourStep < tourSteps.length - 1) {
@@ -2531,12 +2547,14 @@ function positionTourElement() {
             return;
         }
 
-        if (tourTooltip) {
-            tourTooltip.style.opacity = '0';
-            tourTooltip.style.transform = 'translateY(10px)';
+        if (ui.tooltip) {
+            ui.tooltip.style.opacity = '0';
+            ui.tooltip.style.transform = 'translateY(10px)';
         }
+
         if (step.action) step.action();
 
+        // Increased timeout to 500ms to guarantee PC smooth scrolling has completely finished
         setTimeout(() => {
             try {
                 const rect = targetEl.getBoundingClientRect();
@@ -2550,19 +2568,21 @@ function positionTourElement() {
                 }
 
                 const padding = 6;
-                if (tourSpotlight) {
-                    tourSpotlight.style.top = `${rect.top + window.scrollY - padding}px`;
-                    tourSpotlight.style.left = `${rect.left + window.scrollX - padding}px`;
-                    tourSpotlight.style.width = `${rect.width + (padding * 2)}px`;
-                    tourSpotlight.style.height = `${rect.height + (padding * 2)}px`;
-                    tourSpotlight.style.opacity = '1'; 
+                if (ui.spotlight) {
+                    ui.spotlight.style.top = `${rect.top + window.scrollY - padding}px`;
+                    ui.spotlight.style.left = `${rect.left + window.scrollX - padding}px`;
+                    ui.spotlight.style.width = `${rect.width + (padding * 2)}px`;
+                    ui.spotlight.style.height = `${rect.height + (padding * 2)}px`;
+                    
+                    // The magic command that restores the glowing cutout!
+                    ui.spotlight.style.opacity = '1'; 
                 }
 
-                if (tourTitle) tourTitle.textContent = step.title;
-                if (tourText) tourText.innerHTML = step.text;
-                if (tourStepCounter) tourStepCounter.textContent = `${currentTourStep + 1} / ${tourSteps.length}`;
+                if (ui.title) ui.title.textContent = step.title;
+                if (ui.text) ui.text.innerHTML = step.text;
+                if (ui.counter) ui.counter.textContent = `${currentTourStep + 1} / ${tourSteps.length}`;
 
-                if (tourTooltip) {
+                if (ui.tooltip) {
                     let tooltipTop = rect.bottom + window.scrollY + 15;
                     let tooltipLeft = rect.left + window.scrollX - (280 / 2) + (rect.width / 2);
 
@@ -2570,20 +2590,21 @@ function positionTourElement() {
                     if (tooltipLeft + 280 > window.innerWidth - 10) tooltipLeft = window.innerWidth - 290;
                     if (tooltipTop + 150 > window.innerHeight + window.scrollY) tooltipTop = rect.top + window.scrollY - 160;
 
-                    tourTooltip.style.top = `${tooltipTop}px`;
-                    tourTooltip.style.left = `${tooltipLeft}px`;
-                    tourTooltip.style.opacity = '1';
-                    tourTooltip.style.transform = 'translateY(0)';
+                    ui.tooltip.style.top = `${tooltipTop}px`;
+                    ui.tooltip.style.left = `${tooltipLeft}px`;
+                    
+                    ui.tooltip.style.opacity = '1';
+                    ui.tooltip.style.transform = 'translateY(0)';
                 }
 
-                if (tourPrevBtn) tourPrevBtn.style.display = currentTourStep === 0 ? 'none' : 'block';
-                if (tourNextBtn) tourNextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
+                if (ui.prevBtn) ui.prevBtn.style.display = currentTourStep === 0 ? 'none' : 'block';
+                if (ui.nextBtn) ui.nextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
                 
             } catch (innerErr) {
                 console.error("Tour async timer crashed. Shields dropping.");
                 endTour(); 
             }
-        }, 350); 
+        }, 500); 
         
     } catch (err) {
         console.error("Tour Engine crashed. Shields dropping.");
@@ -2593,17 +2614,20 @@ function positionTourElement() {
 
 function startTour() {
     currentTourStep = 0;
-    if (tourShield) tourShield.style.display = 'block';
+    const ui = getTourUI();
     
-    if (tourSpotlight) {
-        tourSpotlight.style.opacity = '0';
-        tourSpotlight.style.display = 'block';
+    if (ui.shield) ui.shield.style.display = 'block';
+    
+    if (ui.spotlight) {
+        ui.spotlight.style.opacity = '0'; // Keeps it hidden until coordinates are found
+        ui.spotlight.style.display = 'block';
     }
-    if (tourTooltip) {
-        tourTooltip.style.display = 'block';
-        void tourTooltip.offsetWidth; 
-        tourTooltip.style.opacity = '0';
-        tourTooltip.style.transform = 'translateY(10px)';
+    
+    if (ui.tooltip) {
+        ui.tooltip.style.display = 'block';
+        void ui.tooltip.offsetWidth; 
+        ui.tooltip.style.opacity = '0';
+        ui.tooltip.style.transform = 'translateY(10px)';
     }
     
     if (typeof triggerHaptic === 'function') triggerHaptic('medium');
@@ -2613,10 +2637,10 @@ function startTour() {
 // -----------------------------------------
 // Tour Event Listeners
 // -----------------------------------------
-// Remove old listeners to prevent double-firing after rebuilding HTML
-if (tourNextBtn) {
-    tourNextBtn.replaceWith(tourNextBtn.cloneNode(true));
-    document.getElementById('tourNextBtn').addEventListener('click', () => {
+// Re-attaches listeners cleanly to the newly injected HTML
+const ui = getTourUI();
+if (ui.nextBtn) {
+    ui.nextBtn.addEventListener('click', () => {
         if (currentTourStep < tourSteps.length - 1) {
             currentTourStep++;
             positionTourElement();
@@ -2624,9 +2648,8 @@ if (tourNextBtn) {
         } else endTour();
     });
 }
-if (tourPrevBtn) {
-    tourPrevBtn.replaceWith(tourPrevBtn.cloneNode(true));
-    document.getElementById('tourPrevBtn').addEventListener('click', () => {
+if (ui.prevBtn) {
+    ui.prevBtn.addEventListener('click', () => {
         if (currentTourStep > 0) {
             currentTourStep--;
             positionTourElement();
@@ -2634,14 +2657,11 @@ if (tourPrevBtn) {
         }
     });
 }
-if (tourSkipBtn) {
-    tourSkipBtn.replaceWith(tourSkipBtn.cloneNode(true));
-    document.getElementById('tourSkipBtn').addEventListener('click', endTour);
-}
-if (startTourBtn) {
-    startTourBtn.replaceWith(startTourBtn.cloneNode(true));
-    document.getElementById('startTourBtn').addEventListener('click', startTour);
-}
+if (ui.skipBtn) ui.skipBtn.addEventListener('click', endTour);
+
+// The start button is fixed in the header, so it grabs directly
+const mainStartBtn = document.getElementById('startTourBtn');
+if (mainStartBtn) mainStartBtn.addEventListener('click', startTour);
 
 
 // =========================================================================
